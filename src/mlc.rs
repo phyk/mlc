@@ -22,9 +22,9 @@ mod test;
 
 type UpdateLabelFunc = fn(&Label<usize>, &Label<usize>) -> Label<usize>;
 
-pub struct MLC<'a, T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> {
+pub struct MLC<'a, T: std::cmp::Eq + std::hash::Hash + std::marker::Copy, const COUNT: usize> {
     // problem state
-    graph: &'a Graph<Vec<T>, WeightsTuple, Directed>,
+    graph: &'a Graph<[T; COUNT], WeightsTuple, Directed>,
     update_label_func: Option<UpdateLabelFunc>,
 
     // config
@@ -71,8 +71,8 @@ impl fmt::Display for MLCError {
 
 impl Error for MLCError {}
 
-impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> MLC<'_, T> {
-    pub fn new(g: &Graph<Vec<T>, WeightsTuple, Directed>) -> Result<MLC<T>, Box<dyn Error>> {
+impl<T: Eq + Copy + Hash, const COUNT: usize> MLC<'_, T, COUNT> {
+    pub fn new(g: &Graph<[T;COUNT], WeightsTuple, Directed>) -> Result<MLC<T,COUNT>, Box<dyn Error>> {
         if g.edge_count() == 0 {
             return Err("Graph has no edges".into());
         }
@@ -95,7 +95,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> MLC<'_, T> {
         let mut limits = Limits::new();
         let categories = g
             .node_indices()
-            .map(|node| g.node_weight(node).unwrap())
+            .map(|node| *g.node_weight(node).unwrap())
             .flatten()
             .collect::<HashSet<_>>();
         for category in categories {
@@ -373,8 +373,8 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> MLC<'_, T> {
         return result;
     }
 
-    fn update_limits(&mut self, label: &Label<usize>, node_values: &Vec<T>) {
-        for value in node_values.iter() {
+    fn update_limits(&mut self, label: &Label<usize>, node_values: &[T;COUNT]) {
+        for value in node_values.into_iter() {
             let category = value;
             let cost = label.values[1];
             let time = label.values[0];
@@ -383,7 +383,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> MLC<'_, T> {
     }
 }
 
-impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> fmt::Debug for MLC<'_, T> {
+impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy, const COUNT: usize> fmt::Debug for MLC<'_, T, COUNT> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MLC")
             .field("debug", &self.debug)

@@ -24,7 +24,7 @@ struct Edge {
     hidden_weights: Option<Weights>,
 }
 
-pub type MLCGraph<T> = Graph<Vec<T>, WeightsTuple, Directed>;
+pub type MLCGraph<T: Sized, const COUNT: usize> = Graph<[T; COUNT], WeightsTuple, Directed>;
 
 // Reads a graph from a csv file. The csv file should have the following format:
 // u,v,weights,hidden_weights
@@ -34,7 +34,7 @@ pub type MLCGraph<T> = Graph<Vec<T>, WeightsTuple, Directed>;
 // The weights and hidden_weights columns must be a comma-separated list of integers.
 pub fn read_graph_and_reset_ids(
     path: &str,
-) -> Result<(MLCGraph<()>, BiMap<String, usize>), Box<dyn Error>> {
+) -> Result<(MLCGraph<u8,0>, BiMap<String, usize>), Box<dyn Error>> {
     // let mut rdr = csv::Reader::from_path(path)?;
     let mut rdr = csv::ReaderBuilder::new().quote(b'"').from_path(path)?;
 
@@ -67,7 +67,7 @@ pub fn read_graph_and_reset_ids(
         .collect::<Vec<_>>();
 
     let g =
-        Graph::<Vec<()>, WeightsTuple, Directed>::from_edges(translated_edges.iter().map(|e| {
+        Graph::<[u8;0], WeightsTuple, Directed>::from_edges(translated_edges.iter().map(|e| {
             (
                 NodeIndex::new(e.u),
                 NodeIndex::new(e.v),
@@ -82,7 +82,7 @@ pub fn read_graph_and_reset_ids(
 
 // Like read_graph_unresetted, but the node ids must be integers from 0 to n-1, where n is the
 // number of nodes in the graph. This function is faster than read_graph_unresetted.
-pub fn read_graph_with_int_ids(path: &str) -> Result<MLCGraph<()>, Box<dyn Error>> {
+pub fn read_graph_with_int_ids(path: &str) -> Result<MLCGraph<u8,0>, Box<dyn Error>> {
     // let mut rdr = csv::Reader::from_path(path)?;
     let mut rdr = csv::ReaderBuilder::new().quote(b'"').from_path(path)?;
 
@@ -92,7 +92,7 @@ pub fn read_graph_with_int_ids(path: &str) -> Result<MLCGraph<()>, Box<dyn Error
         edges.push(edge);
     }
 
-    let g = Graph::<Vec<()>, WeightsTuple, Directed>::from_edges(edges.iter().map(|e| {
+    let g = Graph::<[u8;0], WeightsTuple, Directed>::from_edges(edges.iter().map(|e| {
         (
             NodeIndex::new(e.u),
             NodeIndex::new(e.v),
