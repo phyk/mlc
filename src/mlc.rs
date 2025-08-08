@@ -71,7 +71,7 @@ impl fmt::Display for MLCError {
 
 impl Error for MLCError {}
 
-impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> MLC<'_, T> {
+impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> MLC<'_, T> {
     pub fn new(g: &Graph<Vec<T>, WeightsTuple, Directed>) -> Result<MLC<T>, Box<dyn Error>> {
         if g.edge_count() == 0 {
             return Err("Graph has no edges".into());
@@ -383,7 +383,9 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> MLC<'_, T> {
     }
 }
 
-impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> fmt::Debug for MLC<'_, T> {
+impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> fmt::Debug
+    for MLC<'_, T>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MLC")
             .field("debug", &self.debug)
@@ -393,6 +395,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> fmt::Debug for MLC<'
                 "update_label_func_defined",
                 &self.update_label_func.is_some(),
             )
+            .field("limits_defined", &self.limits)
             .field("weight_length", &self.weight_length)
             .field("hidden_weights_length", &self.hidden_weights_length)
             .finish()
