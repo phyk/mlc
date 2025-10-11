@@ -20,7 +20,7 @@ use self::limit::Limits;
 mod limit;
 mod test;
 
-type UpdateLabelFunc = fn(&Label<usize>, &Label<usize>) -> Label<usize>;
+type UpdateLabelFunc = fn(&Label<usize>, &Label<usize>, u64) -> Label<usize>;
 
 pub struct MLC<'a, T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> {
     // problem state
@@ -32,6 +32,7 @@ pub struct MLC<'a, T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> {
     debug: bool,
     disable_paths: bool,
     enable_limit: bool,
+    accuracy: Option<u64>,
 
     // helper variables
     weight_length: usize,
@@ -111,6 +112,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
             disable_paths: false,
             hidden_weights_length: n_hidden_weights,
             update_label_func: None,
+            accuracy: None,
             debug: false,
             limits,
             enable_limit: false,
@@ -119,9 +121,13 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
 
     pub fn set_update_label_func(
         &mut self,
-        update_label_func: fn(&Label<usize>, &Label<usize>) -> Label<usize>,
+        update_label_func: fn(&Label<usize>, &Label<usize>, u64) -> Label<usize>,
     ) {
         self.update_label_func = Some(update_label_func);
+    }
+
+    pub fn set_accuracy(&mut self, accuracy: u64) {
+        self.accuracy = Some(accuracy);
     }
 
     pub fn set_debug(&mut self, debug: bool) {
@@ -250,6 +256,10 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
         if self.enable_limit && !self.limits.is_initialized() {
             panic!("Limits must be initialized before running the algorithm");
         }
+        if !self.accuracy.is_some() {
+            debug!("Assuming accuracy of 1");
+            self.accuracy = Some(1);
+        }
 
         while let Some(label) = self.queue.pop() {
             if self.enable_limit && self.exceeds_limit(&label) {
@@ -275,7 +285,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
                 let old_label = label.clone();
                 let mut new_label = label.new_along(&edge, self.disable_paths);
                 if let Some(update_label_func) = self.update_label_func {
-                    new_label = update_label_func(&old_label, &new_label);
+                    new_label = update_label_func(&old_label, &new_label, self.accuracy.unwrap());
                 }
                 let target_bag = self
                     .bags
@@ -314,6 +324,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
                 "{} labels were discarded because they exceeded the limit",
                 n_limit_exceeded
             );
+            debug!("limits: {:?}", self.limits);
         }
 
         Ok(&self.bags)
