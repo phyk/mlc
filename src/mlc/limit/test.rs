@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod tests {
+    use log::warn;
+
     use super::super::*;
 
     #[test]
@@ -23,8 +25,8 @@ mod tests {
         limits.add_category("shop");
 
         limits.update_limit("shop", 0, 60);
-        limits.update_limit("shop", 100, 30);
         limits.update_limit("shop", 50, 50);
+        limits.update_limit("shop", 100, 30);
         limits.update_limit("shop", 200, 10);
 
         println!("{:?}", limits);
@@ -68,5 +70,58 @@ mod tests {
         assert_eq!(limits.is_limit_exceeded(100, 110), true); // border determined by (0, 100)
         assert_eq!(limits.is_limit_exceeded(100, 100), true);
         assert_eq!(limits.is_limit_exceeded(100, 90), false);
+    }
+
+    #[test]
+    fn test_init_limits_with_bags() {
+        let mut limits = Limits::new();
+
+        limits.add_category(4);
+        assert_eq!(limits.update_limit(4, 320, 331200), true);
+        assert_eq!(limits.update_limit(4, 320, 318000), true);
+        assert_eq!(limits.update_limit(4, 0, 289948), true);
+        assert_eq!(limits.update_limit(4, 0, 289972), false);
+        assert_eq!(limits.update_limit(4, 0, 289990), false);
+        assert_eq!(limits.update_limit(4, 0, 290342), false);
+
+        assert!(limits.limits.get(&4).unwrap().contains(&Limit {
+            cost: 0,
+            time: 289948
+        }));
+        assert!(!limits.limits.get(&4).unwrap().contains(&Limit {
+            cost: 320,
+            time: 318000
+        }));
+        assert!(!limits.limits.get(&4).unwrap().contains(&Limit {
+            cost: 320,
+            time: 331200
+        }));
+    }
+
+    #[test]
+    fn test_determine_limit() {
+        let mut limits = Limits::new();
+        limits.add_category("shop");
+
+        assert_eq!(limits.determine_limit(0), u64::MAX);
+
+        limits.update_limit("shop", 0, 60);
+
+        assert_eq!(limits.determine_limit(350724), 60);
+
+        limits.update_limit("shop", 50, 50);
+        limits.update_limit("shop", 100, 30);
+        limits.update_limit("shop", 200, 10);
+
+        assert_eq!(limits.determine_limit(0), 60);
+        assert_eq!(limits.determine_limit(50), 50);
+        assert_eq!(limits.determine_limit(100), 30);
+        assert_eq!(limits.determine_limit(200), 10);
+        assert_eq!(limits.determine_limit(150), 30);
+        assert_eq!(limits.determine_limit(250), 10);
+
+        limits.add_category("second");
+
+        assert_eq!(limits.determine_limit(0), u64::MAX);
     }
 }

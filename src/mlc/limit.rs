@@ -7,7 +7,7 @@ pub struct Limits<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> {
     pub limit_cache: HashMap<u64, u64>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Limit {
     pub cost: u64,
     pub time: u64,
@@ -40,8 +40,8 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> Limits<T> {
                 return false;
             }
         }
-        // remove all limits dominated by the new limit
-        limits.retain(|l| l.cost > limit.cost || l.time > limit.time);
+        // retain all limits that are not dominated by the new limit
+        limits.retain(|l| l.cost < limit.cost || l.time < limit.time);
 
         limits.push(limit);
 

@@ -255,6 +255,8 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
 
         if self.enable_limit && !self.limits.is_initialized() {
             panic!("Limits must be initialized before running the algorithm");
+        } else {
+            debug!("Limits initialized: {:?}", self.limits);
         }
         if !self.accuracy.is_some() {
             debug!("Assuming accuracy of 1");
@@ -385,6 +387,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
     }
 
     fn update_limits(&mut self, label: &Label<usize>, node_values: &Vec<T>) {
+        debug!("Updating limits for label {:?}, {:?}", label, node_values);
         for value in node_values.iter() {
             let category = value;
             let cost = label.values[1];
