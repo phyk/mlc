@@ -329,6 +329,22 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
             debug!("limits: {:?}", self.limits);
         }
 
+        // remove labels that exceeded the limit
+        for (_, bag) in self.bags.iter_mut() {
+            bag.labels.retain(|l| {
+                if self.enable_limit {
+                    let values = &l.values;
+                    let cost = values[1];
+                    let time = values[0];
+                    let result = self.limits.is_limit_exceeded(cost, time);
+                    if result {
+                        return false;
+                    }
+                }
+                return true;
+            });
+        }
+
         Ok(&self.bags)
     }
 
@@ -387,7 +403,6 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
     }
 
     fn update_limits(&mut self, label: &Label<usize>, node_values: &Vec<T>) {
-        debug!("Updating limits for label {:?}, {:?}", label, node_values);
         for value in node_values.iter() {
             let category = value;
             let cost = label.values[1];
