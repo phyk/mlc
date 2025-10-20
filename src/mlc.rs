@@ -336,9 +336,8 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
                     let values = &l.values;
                     let cost = values[1];
                     let time = values[0];
-                    let result = self.limits.is_limit_exceeded(cost, time);
-                    if result {
-                        return false;
+                    if let Some(&limit) = self.limits.limit_cache.get(&cost) {
+                        return limit >= time;
                     }
                 }
                 return true;
