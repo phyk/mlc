@@ -31,6 +31,7 @@ pub struct Label<T> {
     pub hidden_values: Vec<u64>,
     pub path: Vec<T>,
     pub node_id: T,
+    pub path_index_offset: usize,
 }
 
 impl Label<NodeId> {
@@ -67,6 +68,7 @@ impl Label<NodeId> {
             path,
             node_id: target_node_id,
             hidden_values,
+            path_index_offset: self.path_index_offset,
         }
     }
 

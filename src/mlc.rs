@@ -198,6 +198,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
             hidden_values,
             path: start_path,
             node_id: start_node,
+            path_index_offset: 0,
         };
         self.queue.push(start_label.clone());
         self.bags
@@ -220,6 +221,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
             hidden_values,
             path: start_path,
             node_id: start_node,
+            path_index_offset: 0,
         };
         self.queue.push(start_label.clone());
         self.bags
@@ -368,6 +370,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
                             .collect(),
                         values: label.values.clone(),
                         hidden_values: label.hidden_values.clone(),
+                        path_index_offset: label.path_index_offset.clone(),
                     })
                     .collect(),
             };
@@ -474,6 +477,7 @@ pub fn read_bags(path: &str) -> Result<Bags<usize>, Box<dyn Error>> {
             hidden_values: vec![],
             path: label_entry.path.clone(),
             node_id: label_entry.node_id,
+            path_index_offset: 0,
         };
         let bag = bags
             .entry(label_entry.node_id)
