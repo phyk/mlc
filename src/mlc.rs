@@ -22,9 +22,9 @@ mod test;
 
 type UpdateLabelFunc = fn(&Label<usize>, &Label<usize>, u64) -> Label<usize>;
 
-pub struct MLC<'a, T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> {
+pub struct MLC<'a> {
     // problem state
-    graph: &'a Graph<Vec<T>, WeightsTuple, Directed>,
+    graph: &'a Graph<Vec<u8>, WeightsTuple, Directed>,
     update_label_func: Option<UpdateLabelFunc>,
 
     // config
@@ -41,7 +41,7 @@ pub struct MLC<'a, T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> {
     // internal state
     bags: Bags<usize>,
     queue: BinaryHeap<Label<usize>>,
-    limits: Limits<T>,
+    limits: Limits<u8>,
 }
 
 pub type Bags<T> = HashMap<T, Bag<T>>;
@@ -72,8 +72,8 @@ impl fmt::Display for MLCError {
 
 impl Error for MLCError {}
 
-impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> MLC<'_, T> {
-    pub fn new(g: &Graph<Vec<T>, WeightsTuple, Directed>) -> Result<MLC<T>, Box<dyn Error>> {
+impl MLC<'_> {
+    pub fn new(g: &Graph<Vec<u8>, WeightsTuple, Directed>) -> Result<MLC, Box<dyn Error>> {
         if g.edge_count() == 0 {
             return Err("Graph has no edges".into());
         }
@@ -404,7 +404,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
         return result;
     }
 
-    fn update_limits(&mut self, label: &Label<usize>, node_values: &Vec<T>) {
+    fn update_limits(&mut self, label: &Label<usize>, node_values: &Vec<u8>) {
         for value in node_values.iter() {
             let category = value;
             let cost = label.values[1];
@@ -414,9 +414,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> ML
     }
 }
 
-impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy + std::fmt::Debug> fmt::Debug
-    for MLC<'_, T>
-{
+impl fmt::Debug for MLC<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MLC")
             .field("debug", &self.debug)
