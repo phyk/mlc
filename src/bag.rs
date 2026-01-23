@@ -31,10 +31,18 @@ pub struct Label<T> {
     pub hidden_values: Vec<u64>,
     pub path: Vec<T>,
     pub node_id: T,
-    pub path_index_offset: usize,
 }
 
 impl Label<NodeId> {
+    pub fn new(node_id: NodeId, arrival_time: u64) -> Label<NodeId> {
+        Label {
+            values: vec![arrival_time, 0],
+            hidden_values: vec![0, 0],
+            path: vec![node_id],
+            node_id,
+        }
+    }
+
     pub fn new_along(
         &self,
         edge: &EdgeReference<WeightsTuple>,
@@ -68,7 +76,6 @@ impl Label<NodeId> {
             path,
             node_id: target_node_id,
             hidden_values,
-            path_index_offset: self.path_index_offset,
         }
     }
 

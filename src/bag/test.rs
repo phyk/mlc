@@ -9,42 +9,36 @@ mod tests {
             hidden_values: vec![],
             path: vec![0, 1, 2],
             node_id: 2,
-            path_index_offset: 0,
         };
         let label2 = Label {
             values: vec![1, 2, 3],
             hidden_values: vec![],
             path: vec![0, 1, 2],
             node_id: 2,
-            path_index_offset: 0,
         };
         let label3 = Label {
             values: vec![2, 3, 4],
             hidden_values: vec![],
             path: vec![0, 1, 2],
             node_id: 2,
-            path_index_offset: 0,
         };
         let label4 = Label {
             values: vec![1, 2, 4],
             hidden_values: vec![],
             path: vec![0, 1, 2],
             node_id: 2,
-            path_index_offset: 0,
         };
         let label_bug_1 = Label {
             values: vec![1852375, 0],
             hidden_values: vec![],
             path: vec![0],
             node_id: 1,
-            path_index_offset: 0,
         };
         let label_bug_2 = Label {
             values: vec![2003938, 0],
             hidden_values: vec![],
             path: vec![0],
             node_id: 1,
-            path_index_offset: 0,
         };
 
         assert!(label1.weakly_dominates(&label2));
@@ -64,14 +58,12 @@ mod tests {
             hidden_values: vec![],
             path: vec![0, 1, 2],
             node_id: 2,
-            path_index_offset: 0,
         };
         let label2 = Label {
             values: vec![2, 3, 4],
             hidden_values: vec![],
             path: vec![0, 1, 2],
             node_id: 2,
-            path_index_offset: 0,
         };
 
         assert!(bag.add_if_necessary(label1.clone()));
@@ -85,7 +77,6 @@ mod tests {
             hidden_values: vec![],
             path: vec![0, 1, 2],
             node_id: 2,
-            path_index_offset: 0,
         };
         assert!(bag.add_if_necessary(label3.clone()));
         assert_eq!(bag.labels.len(), 2);
@@ -103,21 +94,18 @@ mod tests {
             hidden_values: vec![],
             path: vec![0, 1, 2],
             node_id: 2,
-            path_index_offset: 0,
         };
         let label2 = Label {
             values: vec![2, 3, 4],
             hidden_values: vec![],
             path: vec![0, 1, 2],
             node_id: 2,
-            path_index_offset: 0,
         };
         let label3 = Label {
             values: vec![0, 0, 0],
             hidden_values: vec![],
             path: vec![0, 1, 2],
             node_id: 2,
-            path_index_offset: 0,
         };
 
         bag.labels.insert(label1);

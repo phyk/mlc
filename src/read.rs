@@ -82,7 +82,7 @@ pub fn read_graph_and_reset_ids(
 
 // Like read_graph_unresetted, but the node ids must be integers from 0 to n-1, where n is the
 // number of nodes in the graph. This function is faster than read_graph_unresetted.
-pub fn read_graph_with_int_ids(path: &str) -> Result<MLCGraph<()>, Box<dyn Error>> {
+pub fn read_graph_with_int_ids(path: &str) -> Result<MLCGraph<u8>, Box<dyn Error>> {
     // let mut rdr = csv::Reader::from_path(path)?;
     let mut rdr = csv::ReaderBuilder::new().quote(b'"').from_path(path)?;
 
@@ -92,7 +92,7 @@ pub fn read_graph_with_int_ids(path: &str) -> Result<MLCGraph<()>, Box<dyn Error
         edges.push(edge);
     }
 
-    let g = Graph::<Vec<()>, WeightsTuple, Directed>::from_edges(edges.iter().map(|e| {
+    let g = Graph::<Vec<u8>, WeightsTuple, Directed>::from_edges(edges.iter().map(|e| {
         (
             NodeIndex::new(e.u),
             NodeIndex::new(e.v),
