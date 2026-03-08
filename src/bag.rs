@@ -19,46 +19,48 @@ impl From<Vec<u64>> for Weights {
     }
 }
 
+/// An edge weight tuple containing both Pareto objectives and auxiliary tracked values.
+///
+/// - `objectives`: the values used for dominance comparisons (e.g., travel time at index 0,
+///   monetary cost at index 1)
+/// - `auxiliary`: additional values tracked per-label (e.g., distance) but excluded from
+///   dominance checks
 #[derive(Debug, Clone)]
 pub struct WeightsTuple {
-    pub weights: Vec<Weight>,
-    pub hidden_weights: Vec<Weight>,
+    pub objectives: Vec<Weight>,
+    pub auxiliary: Vec<Weight>,
 }
 
+/// A Pareto label representing a route from the origin to `node_id`.
+///
+/// `objectives` and `auxiliary` are accumulated sums of edge weights along the path.
+/// Only `objectives` are used for dominance comparisons; `auxiliary` values are tracked
+/// but ignored when determining whether one label dominates another.
 #[derive(Debug, Clone)]
 pub struct Label<T> {
-    pub values: Vec<u64>,
-    pub hidden_values: Vec<u64>,
+    pub objectives: Vec<u64>,
+    pub auxiliary: Vec<u64>,
     pub path: Vec<T>,
     pub node_id: T,
 }
 
 impl Label<NodeId> {
-    pub fn new(node_id: NodeId, arrival_time: u64) -> Label<NodeId> {
-        Label {
-            values: vec![arrival_time, 0],
-            hidden_values: vec![0, 0],
-            path: vec![node_id],
-            node_id,
-        }
-    }
-
     pub fn new_along(
         &self,
         edge: &EdgeReference<WeightsTuple>,
         disable_path: bool,
     ) -> Label<NodeId> {
         let weight = edge.weight();
-        let values = self
-            .values
+        let objectives = self
+            .objectives
             .iter()
-            .zip(weight.weights.iter())
+            .zip(weight.objectives.iter())
             .map(|(a, b)| a + b)
             .collect();
-        let hidden_values = self
-            .hidden_values
+        let auxiliary = self
+            .auxiliary
             .iter()
-            .zip(weight.hidden_weights.iter())
+            .zip(weight.auxiliary.iter())
             .map(|(a, b)| a + b)
             .collect();
 
@@ -69,13 +71,13 @@ impl Label<NodeId> {
         };
         let target_node_id = edge.target().index();
         if !disable_path {
-            path.push(self.node_id);
+            path.push(target_node_id);
         }
         Label {
-            values,
+            objectives,
             path,
             node_id: target_node_id,
-            hidden_values,
+            auxiliary,
         }
     }
 
@@ -83,9 +85,9 @@ impl Label<NodeId> {
     // this is the case if it either strictly dominates the other label
     // or if it is equal to the other label
     fn weakly_dominates(&self, other: &Label<NodeId>) -> bool {
-        self.values
+        self.objectives
             .iter()
-            .zip(other.values.iter())
+            .zip(other.objectives.iter())
             .all(|(a, b)| a <= b)
     }
 }
@@ -94,7 +96,7 @@ impl<T> Ord for Label<T> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         // lexicographical order, but the smaller the better
         // we need a "min-heap" as queue
-        match self.values.cmp(&other.values) {
+        match self.objectives.cmp(&other.objectives) {
             Ordering::Less => Ordering::Greater,
             Ordering::Greater => Ordering::Less,
             Ordering::Equal => Ordering::Equal,
@@ -106,7 +108,7 @@ impl<T> PartialOrd for Label<T> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         // lexicographical order, but the smaller the better
         // we need a "min-heap" as queue
-        match self.values.cmp(&other.values) {
+        match self.objectives.cmp(&other.objectives) {
             Ordering::Less => Some(Ordering::Greater),
             Ordering::Greater => Some(Ordering::Less),
             Ordering::Equal => Some(Ordering::Equal),
@@ -116,7 +118,7 @@ impl<T> PartialOrd for Label<T> {
 
 impl<T> PartialEq for Label<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.values == other.values
+        self.objectives == other.objectives
     }
 }
 
@@ -124,10 +126,11 @@ impl<T> Eq for Label<T> {}
 
 impl<T> Hash for Label<T> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.values.hash(state);
+        self.objectives.hash(state);
     }
 }
 
+/// Holds the Pareto-optimal (non-dominated) set of labels for a single node.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Bag<T: Eq + Hash> {
     pub labels: HashSet<Label<T>>,
