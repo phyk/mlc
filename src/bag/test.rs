@@ -1,6 +1,102 @@
 #[cfg(test)]
 mod tests {
     use super::super::*;
+    use std::collections::BinaryHeap;
+    use petgraph::{Directed, Graph};
+
+    #[test]
+    fn test_label_ordering() {
+        let label_small = Label {
+            objectives: vec![1, 10],
+            auxiliary: vec![],
+            path: vec![0],
+            node_id: 0,
+        };
+        let label_large = Label {
+            objectives: vec![5, 2],
+            auxiliary: vec![],
+            path: vec![0],
+            node_id: 0,
+        };
+
+        let mut heap = BinaryHeap::new();
+        heap.push(label_large);
+        heap.push(label_small);
+
+        // min-heap: label with smaller objectives[0] pops first
+        let first = heap.pop().unwrap();
+        assert_eq!(first.objectives[0], 1);
+        let second = heap.pop().unwrap();
+        assert_eq!(second.objectives[0], 5);
+    }
+
+    #[test]
+    fn test_label_equality_ignores_path() {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+
+        let label_a = Label {
+            objectives: vec![5, 3],
+            auxiliary: vec![],
+            path: vec![0, 1, 2],
+            node_id: 2,
+        };
+        let label_b = Label {
+            objectives: vec![5, 3],
+            auxiliary: vec![],
+            path: vec![9, 8],
+            node_id: 99,
+        };
+
+        assert_eq!(label_a, label_b);
+
+        let hash_a = {
+            let mut h = DefaultHasher::new();
+            label_a.hash(&mut h);
+            h.finish()
+        };
+        let hash_b = {
+            let mut h = DefaultHasher::new();
+            label_b.hash(&mut h);
+            h.finish()
+        };
+        assert_eq!(hash_a, hash_b);
+    }
+
+    #[test]
+    fn test_label_new_along() {
+        let mut g = Graph::<Vec<u8>, WeightsTuple, Directed>::new();
+        let n0 = g.add_node(vec![]);
+        let n1 = g.add_node(vec![]);
+        g.add_edge(
+            n0,
+            n1,
+            WeightsTuple {
+                objectives: vec![10, 1],
+                auxiliary: vec![],
+            },
+        );
+
+        let start_label = Label {
+            objectives: vec![5, 0],
+            auxiliary: vec![],
+            path: vec![0],
+            node_id: 0,
+        };
+
+        // with disable_path=false
+        let edge = g.edges(n0).next().unwrap();
+        let new_label = start_label.new_along(&edge, false);
+        assert_eq!(new_label.objectives, vec![15, 1]);
+        assert_eq!(new_label.path, vec![0, 1]);
+        assert_eq!(new_label.node_id, 1);
+
+        // with disable_path=true
+        let edge = g.edges(n0).next().unwrap();
+        let new_label_no_path = start_label.new_along(&edge, true);
+        assert_eq!(new_label_no_path.objectives, vec![15, 1]);
+        assert_eq!(new_label_no_path.path, vec![]);
+    }
 
     #[test]
     fn test_weakly_dominates() {

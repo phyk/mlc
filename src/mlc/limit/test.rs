@@ -1,7 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use log::warn;
-
     use super::super::*;
 
     #[test]
@@ -96,6 +94,21 @@ mod tests {
             cost: 320,
             time: 331200
         }));
+    }
+
+    #[test]
+    fn test_get_max_time_for_cost() {
+        let mut limits = Limits::new();
+        limits.add_category("shop");
+        limits.update_limit("shop", 0, 60);
+        limits.update_limit("shop", 100, 30);
+
+        assert_eq!(limits.get_max_time_for_cost(0), Some(60));
+        assert_eq!(limits.get_max_time_for_cost(100), Some(30));
+
+        // exercise the cache path — same calls again
+        assert_eq!(limits.get_max_time_for_cost(0), Some(60));
+        assert_eq!(limits.get_max_time_for_cost(100), Some(30));
     }
 
     #[test]

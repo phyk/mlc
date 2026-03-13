@@ -88,7 +88,7 @@ impl fmt::Display for MLCError {
 impl Error for MLCError {}
 
 impl MLC<'_> {
-    pub fn new(g: &Graph<Vec<u8>, WeightsTuple, Directed>) -> Result<MLC, Box<dyn Error>> {
+    pub fn new(g: &Graph<Vec<u8>, WeightsTuple, Directed>) -> Result<MLC<'_>, Box<dyn Error>> {
         if g.edge_count() == 0 {
             return Err("Graph has no edges".into());
         }

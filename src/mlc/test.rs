@@ -3,10 +3,9 @@ mod tests {
     use crate::mlc;
     use crate::read;
     use std::collections::HashMap;
-    use crate::bag::{Bag, Label};
+    use crate::bag::{Bag, Label, WeightsTuple};
     use petgraph::graph::NodeIndex;
     use petgraph::{Directed, Graph};
-    use crate::bag::WeightsTuple;
 
     #[test]
     fn test_run_mlc() {
@@ -52,6 +51,177 @@ mod tests {
         label.path.windows(2).all(|w| {
             g.contains_edge(NodeIndex::new(w[0]), NodeIndex::new(w[1]))
         })
+    }
+
+    #[test]
+    fn test_set_start_node_with_time() {
+        let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
+        let mut m = mlc::MLC::new(&g).unwrap();
+        m.set_start_node_with_time(0, 100);
+        let bags = m.run().unwrap();
+
+        // Start node bag must contain a label with time == 100
+        let start_bag = bags.get(&0).expect("start node bag missing");
+        assert!(
+            start_bag.labels.iter().any(|l| l.objectives[0] == 100),
+            "start bag must have a label with objectives[0] == 100"
+        );
+
+        // Every label at node 1 must have time >= 100 (offset propagates)
+        let bag1 = bags.get(&1).expect("node 1 bag missing");
+        for label in &bag1.labels {
+            assert!(
+                label.objectives[0] >= 100,
+                "node 1 label has objectives[0] = {} < 100",
+                label.objectives[0]
+            );
+        }
+    }
+
+    #[test]
+    fn test_set_external_start_node() {
+        let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
+        let mut m = mlc::MLC::new(&g).unwrap();
+        let node_map = bimap::BiMap::from_iter(vec![
+            ("0".to_string(), 0usize),
+            ("1".to_string(), 1usize),
+            ("2".to_string(), 2usize),
+            ("3".to_string(), 3usize),
+            ("4".to_string(), 4usize),
+        ]);
+        m.set_node_map(node_map);
+        m.set_external_start_node("0".to_string()).unwrap();
+        let bags = m.run().unwrap();
+        assert!(bags.contains_key(&0), "result bags must contain internal node 0");
+    }
+
+    #[test]
+    fn test_set_external_start_node_error_no_map() {
+        let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
+        let mut m = mlc::MLC::new(&g).unwrap();
+        let result = m.set_external_start_node("0".to_string());
+        assert!(
+            matches!(result, Err(mlc::MLCError::NodeMapNotSet)),
+            "expected NodeMapNotSet error"
+        );
+    }
+
+    #[test]
+    fn test_set_external_start_node_error_not_found() {
+        let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
+        let mut m = mlc::MLC::new(&g).unwrap();
+        let node_map = bimap::BiMap::from_iter(vec![("0".to_string(), 0usize)]);
+        m.set_node_map(node_map);
+        let result = m.set_external_start_node("99999".to_string());
+        assert!(
+            matches!(result, Err(mlc::MLCError::StartNodeNotFound(_))),
+            "expected StartNodeNotFound error"
+        );
+    }
+
+    #[test]
+    fn test_set_disable_paths() {
+        let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
+        let mut m = mlc::MLC::new(&g).unwrap();
+        m.set_disable_paths(true);
+        m.set_start_node(0);
+        let bags = m.run().unwrap();
+        for bag in bags.values() {
+            for label in &bag.labels {
+                assert!(
+                    label.path.is_empty(),
+                    "expected empty path when disable_paths=true, got {:?}",
+                    label.path
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_write_bags_read_bags_roundtrip() {
+        let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
+        let mut m = mlc::MLC::new(&g).unwrap();
+        m.set_start_node(0);
+        let bags = m.run().unwrap().clone();
+
+        let tmp_path = "/tmp/test_mlc_roundtrip.csv";
+        mlc::write_bags(&bags, tmp_path).unwrap();
+        let read_back = mlc::read_bags(tmp_path).unwrap();
+
+        assert_eq!(bags, read_back);
+    }
+
+    #[test]
+    fn test_mlc_new_empty_graph_error() {
+        use petgraph::{Directed, Graph};
+        let mut g = Graph::<Vec<u8>, WeightsTuple, Directed>::new();
+        g.add_node(vec![]);
+        g.add_node(vec![]);
+        // no edges added
+        assert!(mlc::MLC::new(&g).is_err());
+    }
+
+    #[test]
+    fn test_set_update_label_func() {
+        let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
+        let mut m = mlc::MLC::new(&g).unwrap();
+        m.set_update_label_func(|_old, new_label, _accuracy| {
+            let mut updated = new_label.clone();
+            updated.objectives[0] += 1000;
+            updated
+        });
+        m.set_start_node(0);
+        let bags = m.run().unwrap();
+
+        // node 4 is reachable via 4 edges; each step adds 1000 to objectives[0]
+        let bag4 = bags.get(&4).expect("node 4 bag must exist");
+        for label in &bag4.labels {
+            assert!(
+                label.objectives[0] >= 4000,
+                "node 4 label has objectives[0] = {} < 4000",
+                label.objectives[0]
+            );
+        }
+    }
+
+    #[test]
+    fn test_enable_limit_requires_categories() {
+        // edges.csv nodes have no categories → limits not initialised → panic
+        let result = std::panic::catch_unwind(|| {
+            let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
+            let mut m = mlc::MLC::new(&g).unwrap();
+            m.set_enable_limit(true);
+            m.set_start_node(0);
+            let _ = m.run();
+        });
+        assert!(result.is_err(), "expected a panic when limits are not initialised");
+    }
+
+    #[test]
+    fn test_enable_limit_with_categorised_graph() {
+        let g = build_brugge_walking_graph();
+        let mut m = mlc::MLC::new(&g).unwrap();
+        m.set_enable_limit(true);
+        m.set_start_node(0);
+        let bags = m.run().unwrap();
+
+        assert!(!bags.is_empty(), "bags must be non-empty");
+        assert!(bags.contains_key(&0), "start node must be in bags");
+
+        // Validate paths for the first 50 bags
+        let mut checked = 0;
+        for bag in bags.values().take(50) {
+            for label in &bag.labels {
+                assert!(
+                    path_is_valid(label, &g),
+                    "invalid path {:?} → {}",
+                    label.path,
+                    label.node_id
+                );
+                checked += 1;
+            }
+        }
+        assert!(checked > 0, "no labels to validate");
     }
 
     #[test]
