@@ -165,7 +165,7 @@ mod tests {
     fn test_set_update_label_func() {
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
         let mut m = mlc::MLC::new(&g).unwrap();
-        m.set_update_label_func(|_old, new_label, _accuracy| {
+        m.set_update_label_func(|_old, new_label| {
             let mut updated = new_label.clone();
             updated.objectives[0] += 1000;
             updated

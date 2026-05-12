@@ -28,8 +28,6 @@ const OBJECTIVE_COST_IDX: usize = 1;
 /// Log queue size every this many iterations.
 const QUEUE_LOG_INTERVAL: usize = 1_000;
 
-type UpdateLabelFunc = fn(&Label<usize>, &Label<usize>, u64) -> Label<usize>;
-
 /// Multi-Label Constrained (MLC) shortest-path algorithm.
 ///
 /// Implements a multi-objective variant of Dijkstra that finds all Pareto-optimal routes
@@ -40,14 +38,13 @@ type UpdateLabelFunc = fn(&Label<usize>, &Label<usize>, u64) -> Label<usize>;
 pub struct MLC<'a> {
     // problem state
     graph: &'a Graph<Vec<u8>, WeightsTuple, Directed>,
-    update_label_func: Option<UpdateLabelFunc>,
+    update_label_func: Option<Box<dyn Fn(&Label<usize>, &Label<usize>) -> Label<usize>>>,
 
     // config
     node_map: Option<BiMap<String, usize>>,
     debug: bool,
     disable_paths: bool,
     enable_limit: bool,
-    accuracy: Option<u64>,
 
     // helper variables
     objective_count: usize,
@@ -127,7 +124,6 @@ impl MLC<'_> {
             disable_paths: false,
             auxiliary_count,
             update_label_func: None,
-            accuracy: None,
             debug: false,
             limits,
             enable_limit: false,
@@ -136,13 +132,9 @@ impl MLC<'_> {
 
     pub fn set_update_label_func(
         &mut self,
-        update_label_func: fn(&Label<usize>, &Label<usize>, u64) -> Label<usize>,
+        f: impl Fn(&Label<usize>, &Label<usize>) -> Label<usize> + 'static,
     ) {
-        self.update_label_func = Some(update_label_func);
-    }
-
-    pub fn set_accuracy(&mut self, accuracy: u64) {
-        self.accuracy = Some(accuracy);
+        self.update_label_func = Some(Box::new(f));
     }
 
     pub fn set_debug(&mut self, debug: bool) {
@@ -266,10 +258,6 @@ impl MLC<'_> {
         } else {
             debug!("Limits initialized: {:?}", self.limits);
         }
-        if self.accuracy.is_none() {
-            debug!("Assuming accuracy of 1");
-            self.accuracy = Some(1);
-        }
 
         while let Some(label) = self.queue.pop() {
             if self.enable_limit && self.exceeds_limit(&label) {
@@ -294,8 +282,8 @@ impl MLC<'_> {
             for edge in self.graph.edges(NodeIndex::new(node_id)) {
                 let old_label = label.clone();
                 let mut new_label = label.new_along(&edge, self.disable_paths);
-                if let Some(update_label_func) = self.update_label_func {
-                    new_label = update_label_func(&old_label, &new_label, self.accuracy.unwrap());
+                if let Some(ref update_label_func) = self.update_label_func {
+                    new_label = update_label_func(&old_label, &new_label);
                 }
                 let target_bag = self
                     .bags
@@ -430,10 +418,7 @@ impl fmt::Debug for MLC<'_> {
             .field("debug", &self.debug)
             .field("disable_paths", &self.disable_paths)
             .field("enable_limit", &self.enable_limit)
-            .field(
-                "update_label_func_defined",
-                &self.update_label_func.is_some(),
-            )
+            .field("update_label_func_defined", &self.update_label_func.is_some())
             .field("limits_defined", &self.limits)
             .field("objective_count", &self.objective_count)
             .field("auxiliary_count", &self.auxiliary_count)
