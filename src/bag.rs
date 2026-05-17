@@ -110,7 +110,7 @@ impl Label<NodeId> {
         &self,
         edge: &EdgeReference<WeightsTuple>,
         disable_path: bool,
-        update_label_func: &Box<dyn Fn(&Label<usize>, &WeightsTuple) -> Objective>,
+        update_label_func: impl Fn(&Label<usize>, &WeightsTuple) -> Objective,
     ) -> Label<NodeId> {
         let weight = edge.weight();
         let objectives = update_label_func(self, weight);
