@@ -20,11 +20,6 @@ use self::limit::Limits;
 mod limit;
 mod test;
 
-/// Objective index for travel time (must be 0).
-const OBJECTIVE_TIME_IDX: usize = 0;
-/// Objective index for monetary cost (must be 1).
-const OBJECTIVE_COST_IDX: usize = 1;
-
 /// Log queue size every this many iterations.
 const QUEUE_LOG_INTERVAL: usize = 1_000;
 
@@ -38,7 +33,7 @@ const QUEUE_LOG_INTERVAL: usize = 1_000;
 pub struct MLC<'a> {
     // problem state
     graph: &'a Graph<Vec<u8>, WeightsTuple, Directed>,
-    update_label_func: Option<Box<dyn Fn(&Label<usize>, &Label<usize>) -> Label<usize>>>,
+    update_label_func: Box<dyn Fn(&Label<usize>, &WeightsTuple) -> Objective>,
 
     // config
     node_map: Option<BiMap<String, usize>>,
@@ -47,7 +42,6 @@ pub struct MLC<'a> {
     enable_limit: bool,
 
     // helper variables
-    objective_count: usize,
     auxiliary_count: usize,
 
     // internal state
@@ -84,6 +78,10 @@ impl fmt::Display for MLCError {
 
 impl Error for MLCError {}
 
+fn simple_add_func(label: &Label<usize>, weights: &WeightsTuple) -> Objective {
+    Objective::new(weights.objectives[0], 0) + label.objective.clone()
+}
+
 impl MLC<'_> {
     pub fn new(g: &Graph<Vec<u8>, WeightsTuple, Directed>) -> Result<MLC<'_>, Box<dyn Error>> {
         if g.edge_count() == 0 {
@@ -91,14 +89,10 @@ impl MLC<'_> {
         }
 
         let sample_edge_weight = g.edge_references().next().unwrap().weight();
-        let objective_count = sample_edge_weight.objectives.len();
         let auxiliary_count = sample_edge_weight.auxiliary.len();
 
         for node in g.node_indices() {
             for edge in g.edges(node) {
-                if objective_count != edge.weight().objectives.len() {
-                    return Err("Graph has inconsistent edge weights".into());
-                }
                 if auxiliary_count != edge.weight().auxiliary.len() {
                     return Err("Graph has inconsistent hidden edge weights".into());
                 }
@@ -119,11 +113,10 @@ impl MLC<'_> {
             graph: g,
             bags: HashMap::new(),
             queue: BinaryHeap::new(),
-            objective_count,
             node_map: None,
             disable_paths: false,
             auxiliary_count,
-            update_label_func: None,
+            update_label_func: Box::new(simple_add_func),
             debug: false,
             limits,
             enable_limit: false,
@@ -132,9 +125,9 @@ impl MLC<'_> {
 
     pub fn set_update_label_func(
         &mut self,
-        f: impl Fn(&Label<usize>, &Label<usize>) -> Label<usize> + 'static,
+        f: impl Fn(&Label<usize>, &WeightsTuple) -> Objective + 'static,
     ) {
-        self.update_label_func = Some(Box::new(f));
+        self.update_label_func = Box::new(f);
     }
 
     pub fn set_debug(&mut self, debug: bool) {
@@ -175,7 +168,6 @@ impl MLC<'_> {
                     label_node_tuples.push((label.clone(), node_weight));
                 }
 
-                assert_eq!(label.objectives.len(), self.objective_count);
                 assert_eq!(
                     label.auxiliary.len(),
                     self.auxiliary_count,
@@ -193,14 +185,14 @@ impl MLC<'_> {
     }
 
     /// Constructs a start label for `node` with the given initial objective values.
-    fn make_start_label(&self, node: usize, initial_objectives: Vec<u64>) -> Label<usize> {
+    fn make_start_label(&self, node: usize, time: u64, cost: u64) -> Label<usize> {
         let path = if self.disable_paths {
             vec![]
         } else {
             vec![node]
         };
         Label {
-            objectives: initial_objectives,
+            objective: Objective::new(time, cost),
             auxiliary: vec![0; self.auxiliary_count],
             path,
             node_id: node,
@@ -208,17 +200,14 @@ impl MLC<'_> {
     }
 
     pub fn set_start_node(&mut self, start_node: usize) {
-        let start_label =
-            self.make_start_label(start_node, vec![0; self.objective_count]);
+        let start_label = self.make_start_label(start_node, 0, 0);
         self.queue.push(start_label.clone());
         self.bags
             .insert(start_node, Bag::new_start_bag(start_label));
     }
 
-    pub fn set_start_node_with_time(&mut self, start_node: usize, time: usize) {
-        let mut initial_objectives = vec![0; self.objective_count];
-        initial_objectives[OBJECTIVE_TIME_IDX] = time.try_into().unwrap();
-        let start_label = self.make_start_label(start_node, initial_objectives);
+    pub fn set_start_node_with_time(&mut self, start_node: usize, time: u64) {
+        let start_label = self.make_start_label(start_node, 0, time);
         self.queue.push(start_label.clone());
         self.bags
             .insert(start_node, Bag::new_start_bag(start_label));
@@ -280,11 +269,7 @@ impl MLC<'_> {
             }
 
             for edge in self.graph.edges(NodeIndex::new(node_id)) {
-                let old_label = label.clone();
-                let mut new_label = label.new_along(&edge, self.disable_paths);
-                if let Some(ref update_label_func) = self.update_label_func {
-                    new_label = update_label_func(&old_label, &new_label);
-                }
+                let new_label = label.new_along(&edge, self.disable_paths, &self.update_label_func);
                 let target_bag = self
                     .bags
                     .entry(edge.target().index())
@@ -329,10 +314,8 @@ impl MLC<'_> {
         for (_, bag) in self.bags.iter_mut() {
             bag.labels.retain(|l| {
                 if self.enable_limit {
-                    let cost = l.objectives[OBJECTIVE_COST_IDX];
-                    let time = l.objectives[OBJECTIVE_TIME_IDX];
-                    if let Some(max_time) = self.limits.get_max_time_for_cost(cost) {
-                        return max_time >= time;
+                    if let Some(max_time) = self.limits.get_max_time_for_cost(l.objective.cost) {
+                        return max_time >= l.objective.time;
                     }
                 }
                 return true;
@@ -361,7 +344,7 @@ impl MLC<'_> {
                             .iter()
                             .map(|n| node_map.get_by_right(n).unwrap().to_string())
                             .collect(),
-                        objectives: label.objectives.clone(),
+                        objective: label.objective.clone(),
                         auxiliary: label.auxiliary.clone(),
                     })
                     .collect(),
@@ -390,24 +373,15 @@ impl MLC<'_> {
     /// Assumes exactly 2 objectives: time at index `OBJECTIVE_TIME_IDX` and cost at
     /// index `OBJECTIVE_COST_IDX`. Panics if the label has a different number of objectives.
     fn exceeds_limit(&mut self, label: &Label<usize>) -> bool {
-        let objectives = &label.objectives;
-        if objectives.len() != 2 {
-            panic!(
-                "exceeds_limit requires exactly 2 objectives (time, cost), got {}",
-                objectives.len()
-            );
-        }
-        let cost = objectives[OBJECTIVE_COST_IDX];
-        let time = objectives[OBJECTIVE_TIME_IDX];
-        self.limits.is_limit_exceeded(cost, time)
+        self.limits
+            .is_limit_exceeded(label.objective.cost, label.objective.time)
     }
 
     fn update_limits(&mut self, label: &Label<usize>, node_values: &Vec<u8>) {
         for value in node_values.iter() {
             let category = value;
-            let cost = label.objectives[OBJECTIVE_COST_IDX];
-            let time = label.objectives[OBJECTIVE_TIME_IDX];
-            self.limits.update_limit(*category, cost, time);
+            self.limits
+                .update_limit(*category, label.objective.cost, label.objective.time);
         }
     }
 }
@@ -418,9 +392,7 @@ impl fmt::Debug for MLC<'_> {
             .field("debug", &self.debug)
             .field("disable_paths", &self.disable_paths)
             .field("enable_limit", &self.enable_limit)
-            .field("update_label_func_defined", &self.update_label_func.is_some())
             .field("limits_defined", &self.limits)
-            .field("objective_count", &self.objective_count)
             .field("auxiliary_count", &self.auxiliary_count)
             .finish()
     }
@@ -465,7 +437,7 @@ pub fn read_bags(path: &str) -> Result<Bags<usize>, Box<dyn Error>> {
     for line in read_to_string(path)?.lines().skip(1) {
         let label_entry: LabelEntry = line.parse()?;
         let label = Label {
-            objectives: label_entry.values.clone(),
+            objective: Objective::new(label_entry.values[0], label_entry.values[1]),
             auxiliary: vec![],
             path: label_entry.path.clone(),
             node_id: label_entry.node_id,
@@ -488,7 +460,7 @@ pub fn write_bags<T: Eq + Hash + Display>(
 
     for bag in bags.values() {
         for label in bag.labels.iter() {
-            let mut values = label.objectives.clone();
+            let mut values = vec![label.objective.time, label.objective.cost];
             values.extend(label.auxiliary.clone());
             let line = format!(
                 "{}|{}|{}\n",

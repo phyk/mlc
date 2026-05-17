@@ -5,6 +5,7 @@ use petgraph::visit::EdgeRef;
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::hash::Hash;
+use std::ops::Add;
 
 pub type Weight = u64;
 pub type NodeId = usize;
@@ -38,10 +39,70 @@ pub struct WeightsTuple {
 /// but ignored when determining whether one label dominates another.
 #[derive(Debug, Clone)]
 pub struct Label<T> {
-    pub objectives: Vec<u64>,
+    pub objective: Objective,
     pub auxiliary: Vec<u64>,
     pub path: Vec<T>,
     pub node_id: T,
+}
+
+#[derive(Debug, Clone)]
+pub struct Objective {
+    pub time: u64,
+    pub cost: u64,
+}
+
+impl Add for Objective {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Objective {
+            time: self.time + rhs.time,
+            cost: self.cost + rhs.cost,
+        }
+    }
+}
+
+impl PartialEq for Objective {
+    fn eq(&self, other: &Self) -> bool {
+        self.time == other.time && self.cost == other.cost
+    }
+}
+
+impl Eq for Objective {}
+
+impl PartialOrd for Objective {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Objective {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let ordering = self.time.cmp(&other.time);
+        let second_ordering = self.cost.cmp(&other.cost);
+        if (ordering.is_gt() & second_ordering.is_ge())
+            || (second_ordering.is_gt() & ordering.is_ge())
+        {
+            Ordering::Greater
+        } else if ordering.is_eq() & second_ordering.is_eq() {
+            Ordering::Equal
+        } else {
+            Ordering::Less
+        }
+    }
+}
+
+impl Hash for Objective {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.time.hash(state);
+        self.cost.hash(state);
+    }
+}
+
+impl Objective {
+    pub fn new(time: u64, cost: u64) -> Objective {
+        Objective { time, cost }
+    }
 }
 
 impl Label<NodeId> {
@@ -49,14 +110,10 @@ impl Label<NodeId> {
         &self,
         edge: &EdgeReference<WeightsTuple>,
         disable_path: bool,
+        update_label_func: &Box<dyn Fn(&Label<usize>, &WeightsTuple) -> Objective>,
     ) -> Label<NodeId> {
         let weight = edge.weight();
-        let objectives = self
-            .objectives
-            .iter()
-            .zip(weight.objectives.iter())
-            .map(|(a, b)| a + b)
-            .collect();
+        let objectives = update_label_func(self, weight);
         let auxiliary = self
             .auxiliary
             .iter()
@@ -74,7 +131,7 @@ impl Label<NodeId> {
             path.push(target_node_id);
         }
         Label {
-            objectives,
+            objective: objectives,
             path,
             node_id: target_node_id,
             auxiliary,
@@ -85,10 +142,7 @@ impl Label<NodeId> {
     // this is the case if it either strictly dominates the other label
     // or if it is equal to the other label
     fn weakly_dominates(&self, other: &Label<NodeId>) -> bool {
-        self.objectives
-            .iter()
-            .zip(other.objectives.iter())
-            .all(|(a, b)| a <= b)
+        self.objective <= other.objective
     }
 }
 
@@ -96,7 +150,7 @@ impl<T> Ord for Label<T> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         // lexicographical order, but the smaller the better
         // we need a "min-heap" as queue
-        match self.objectives.cmp(&other.objectives) {
+        match self.objective.cmp(&other.objective) {
             Ordering::Less => Ordering::Greater,
             Ordering::Greater => Ordering::Less,
             Ordering::Equal => Ordering::Equal,
@@ -108,7 +162,7 @@ impl<T> PartialOrd for Label<T> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         // lexicographical order, but the smaller the better
         // we need a "min-heap" as queue
-        match self.objectives.cmp(&other.objectives) {
+        match self.objective.cmp(&other.objective) {
             Ordering::Less => Some(Ordering::Greater),
             Ordering::Greater => Some(Ordering::Less),
             Ordering::Equal => Some(Ordering::Equal),
@@ -118,7 +172,7 @@ impl<T> PartialOrd for Label<T> {
 
 impl<T> PartialEq for Label<T> {
     fn eq(&self, other: &Self) -> bool {
-        self.objectives == other.objectives
+        self.objective == other.objective
     }
 }
 
@@ -126,7 +180,7 @@ impl<T> Eq for Label<T> {}
 
 impl<T> Hash for Label<T> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.objectives.hash(state);
+        self.objective.hash(state);
     }
 }
 
