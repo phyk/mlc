@@ -28,8 +28,13 @@ impl From<Vec<u64>> for Weights {
 ///   dominance checks
 #[derive(Debug, Clone)]
 pub struct WeightsTuple {
-    pub objectives: Vec<Weight>,
-    pub auxiliary: Vec<Weight>,
+    pub distance_mm: u64,
+}
+
+impl WeightsTuple {
+    fn new(distance_mm: u64) -> WeightsTuple {
+        WeightsTuple { distance_mm }
+    }
 }
 
 /// A Pareto label representing a route from the origin to `node_id`.
@@ -40,7 +45,7 @@ pub struct WeightsTuple {
 #[derive(Debug, Clone)]
 pub struct Label<T> {
     pub objective: Objective,
-    pub auxiliary: Vec<u64>,
+    pub auxiliary: Auxiliary,
     pub path: Vec<T>,
     pub node_id: T,
 }
@@ -49,6 +54,42 @@ pub struct Label<T> {
 pub struct Objective {
     pub time: u64,
     pub cost: u64,
+}
+
+#[derive(Debug, Clone)]
+pub struct Auxiliary {
+    pub dist_walk: u64,
+    pub dist_bike: u64,
+    pub dist_car: u64,
+}
+
+impl Add for Auxiliary {
+    type Output = Self;
+    fn add(self, rhs: Self) -> Self::Output {
+        Auxiliary {
+            dist_bike: self.dist_bike + rhs.dist_bike,
+            dist_car: self.dist_car + rhs.dist_car,
+            dist_walk: self.dist_walk + rhs.dist_walk,
+        }
+    }
+}
+
+impl Auxiliary {
+    pub fn new(dist_walk: u64, dist_bike: u64, dist_car: u64) -> Auxiliary {
+        Auxiliary {
+            dist_walk,
+            dist_bike,
+            dist_car,
+        }
+    }
+
+    pub fn new_empty() -> Auxiliary {
+        Auxiliary {
+            dist_walk: 0,
+            dist_bike: 0,
+            dist_car: 0,
+        }
+    }
 }
 
 impl Add for Objective {
@@ -110,16 +151,10 @@ impl Label<NodeId> {
         &self,
         edge: &EdgeReference<WeightsTuple>,
         disable_path: bool,
-        update_label_func: impl Fn(&Label<usize>, &WeightsTuple) -> Objective,
+        update_label_func: impl Fn(&Label<usize>, &WeightsTuple) -> (Objective, Auxiliary),
     ) -> Label<NodeId> {
         let weight = edge.weight();
-        let objectives = update_label_func(self, weight);
-        let auxiliary = self
-            .auxiliary
-            .iter()
-            .zip(weight.auxiliary.iter())
-            .map(|(a, b)| a + b)
-            .collect();
+        let (objective, auxiliary) = update_label_func(self, weight);
 
         let mut path = if disable_path {
             vec![]
@@ -131,7 +166,7 @@ impl Label<NodeId> {
             path.push(target_node_id);
         }
         Label {
-            objective: objectives,
+            objective,
             path,
             node_id: target_node_id,
             auxiliary,
@@ -163,8 +198,8 @@ impl<T> PartialOrd for Label<T> {
         // lexicographical order, but the smaller the better
         // we need a "min-heap" as queue
         match self.objective.cmp(&other.objective) {
-            Ordering::Less => Some(Ordering::Greater),
-            Ordering::Greater => Some(Ordering::Less),
+            Ordering::Less => Some(Ordering::Less),
+            Ordering::Greater => Some(Ordering::Greater),
             Ordering::Equal => Some(Ordering::Equal),
         }
     }

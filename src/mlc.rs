@@ -20,29 +20,18 @@ use self::limit::Limits;
 mod limit;
 mod test;
 
-/// Log queue size every this many iterations.
 const QUEUE_LOG_INTERVAL: usize = 1_000;
 
-/// Multi-Label Constrained (MLC) shortest-path algorithm.
-///
-/// Implements a multi-objective variant of Dijkstra that finds all Pareto-optimal routes
-/// from an origin to N destinations. Labels are pruned via dominance: a new label reaching
-/// a node is discarded if an existing label at that node weakly dominates it. An optional
-/// limit/early-stopping mechanism further prunes labels whose (time, cost) objectives
-/// exceed known bounds derived from constrained nodes.
 pub struct MLC<'a> {
     // problem state
     graph: &'a Graph<Vec<u8>, WeightsTuple, Directed>,
-    update_label_func: Box<dyn Fn(&Label<usize>, &WeightsTuple) -> Objective>,
+    update_label_func: Box<dyn Fn(&Label<usize>, &WeightsTuple) -> (Objective, Auxiliary)>,
 
     // config
     node_map: Option<BiMap<String, usize>>,
     debug: bool,
     disable_paths: bool,
     enable_limit: bool,
-
-    // helper variables
-    auxiliary_count: usize,
 
     // internal state
     bags: Bags<usize>,
@@ -78,25 +67,21 @@ impl fmt::Display for MLCError {
 
 impl Error for MLCError {}
 
-fn simple_add_func(label: &Label<usize>, weights: &WeightsTuple) -> Objective {
-    Objective::new(weights.objectives[0], 0) + label.objective.clone()
+fn simple_add_func(label: &Label<usize>, weights: &WeightsTuple) -> (Objective, Auxiliary) {
+    (
+        Objective::new(weights.distance_mm, 0) + label.objective.clone(),
+        Auxiliary::new(
+            weights.distance_mm + label.auxiliary.dist_walk,
+            label.auxiliary.dist_bike,
+            label.auxiliary.dist_car,
+        ),
+    )
 }
 
 impl MLC<'_> {
     pub fn new(g: &Graph<Vec<u8>, WeightsTuple, Directed>) -> Result<MLC<'_>, Box<dyn Error>> {
         if g.edge_count() == 0 {
             return Err("Graph has no edges".into());
-        }
-
-        let sample_edge_weight = g.edge_references().next().unwrap().weight();
-        let auxiliary_count = sample_edge_weight.auxiliary.len();
-
-        for node in g.node_indices() {
-            for edge in g.edges(node) {
-                if auxiliary_count != edge.weight().auxiliary.len() {
-                    return Err("Graph has inconsistent hidden edge weights".into());
-                }
-            }
         }
 
         let mut limits = Limits::new();
@@ -115,7 +100,6 @@ impl MLC<'_> {
             queue: BinaryHeap::new(),
             node_map: None,
             disable_paths: false,
-            auxiliary_count,
             update_label_func: Box::new(simple_add_func),
             debug: false,
             limits,
@@ -125,7 +109,7 @@ impl MLC<'_> {
 
     pub fn set_update_label_func(
         &mut self,
-        f: impl Fn(&Label<usize>, &WeightsTuple) -> Objective + 'static,
+        f: impl Fn(&Label<usize>, &WeightsTuple) -> (Objective, Auxiliary) + 'static,
     ) {
         self.update_label_func = Box::new(f);
     }
@@ -167,15 +151,6 @@ impl MLC<'_> {
                 if self.enable_limit && node_weight.len() > 0 {
                     label_node_tuples.push((label.clone(), node_weight));
                 }
-
-                assert_eq!(
-                    label.auxiliary.len(),
-                    self.auxiliary_count,
-                    "new label length: {} != {}: old label length",
-                    label.auxiliary.len(),
-                    self.auxiliary_count
-                );
-
                 self.queue.push(label.clone());
             }
         }
@@ -193,7 +168,7 @@ impl MLC<'_> {
         };
         Label {
             objective: Objective::new(time, cost),
-            auxiliary: vec![0; self.auxiliary_count],
+            auxiliary: Auxiliary::new(0, 0, 0),
             path,
             node_id: node,
         }
@@ -393,7 +368,6 @@ impl fmt::Debug for MLC<'_> {
             .field("disable_paths", &self.disable_paths)
             .field("enable_limit", &self.enable_limit)
             .field("limits_defined", &self.limits)
-            .field("auxiliary_count", &self.auxiliary_count)
             .finish()
     }
 }
@@ -438,7 +412,11 @@ pub fn read_bags(path: &str) -> Result<Bags<usize>, Box<dyn Error>> {
         let label_entry: LabelEntry = line.parse()?;
         let label = Label {
             objective: Objective::new(label_entry.values[0], label_entry.values[1]),
-            auxiliary: vec![],
+            auxiliary: Auxiliary::new(
+                label_entry.values[2],
+                label_entry.values[3],
+                label_entry.values[4],
+            ),
             path: label_entry.path.clone(),
             node_id: label_entry.node_id,
         };
@@ -460,8 +438,13 @@ pub fn write_bags<T: Eq + Hash + Display>(
 
     for bag in bags.values() {
         for label in bag.labels.iter() {
-            let mut values = vec![label.objective.time, label.objective.cost];
-            values.extend(label.auxiliary.clone());
+            let values = vec![
+                label.objective.time,
+                label.objective.cost,
+                label.auxiliary.dist_walk,
+                label.auxiliary.dist_bike,
+                label.auxiliary.dist_car,
+            ];
             let line = format!(
                 "{}|{}|{}\n",
                 label.node_id,

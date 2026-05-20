@@ -1,11 +1,13 @@
 #[cfg(test)]
 mod tests {
+    use crate::bag::Auxiliary;
+    use crate::bag::Objective;
+    use crate::bag::{Bag, Label, WeightsTuple};
     use crate::mlc;
     use crate::read;
-    use std::collections::HashMap;
-    use crate::bag::{Bag, Label, WeightsTuple};
     use petgraph::graph::NodeIndex;
     use petgraph::{Directed, Graph};
+    use std::collections::HashMap;
 
     #[test]
     fn test_run_mlc() {
@@ -23,20 +25,20 @@ mod tests {
         for line in std::fs::read_to_string(path).unwrap().lines().skip(1) {
             let mut parts = line.splitn(2, ',');
             let node_id: usize = parts.next().unwrap().parse().unwrap();
-            let cats: Vec<u8> = parts.next().unwrap()
-                .split(';').map(|s| s.parse().unwrap()).collect();
+            let cats: Vec<u8> = parts
+                .next()
+                .unwrap()
+                .split(';')
+                .map(|s| s.parse().unwrap())
+                .collect();
             map.insert(node_id, cats);
         }
         map
     }
 
     fn build_brugge_walking_graph() -> Graph<Vec<u8>, WeightsTuple, Directed> {
-        let mut g = read::read_graph_with_int_ids(
-            "testdata/brugge_walking_edges.csv"
-        ).unwrap();
-        let categories = read_node_categories(
-            "testdata/brugge_walking_node_categories.csv"
-        );
+        let mut g = read::read_graph_with_int_ids("testdata/brugge_walking_edges.csv").unwrap();
+        let categories = read_node_categories("testdata/brugge_walking_node_categories.csv");
         for node in g.node_indices() {
             if let Some(cats) = categories.get(&node.index()) {
                 *g.node_weight_mut(node).unwrap() = cats.clone();
@@ -48,9 +50,10 @@ mod tests {
     fn path_is_valid(label: &Label<usize>, g: &Graph<Vec<u8>, WeightsTuple, Directed>) -> bool {
         // path contains the full route including the destination node,
         // so consecutive pairs are the edges that must exist in the graph.
-        label.path.windows(2).all(|w| {
-            g.contains_edge(NodeIndex::new(w[0]), NodeIndex::new(w[1]))
-        })
+        label
+            .path
+            .windows(2)
+            .all(|w| g.contains_edge(NodeIndex::new(w[0]), NodeIndex::new(w[1])))
     }
 
     #[test]
@@ -63,17 +66,17 @@ mod tests {
         // Start node bag must contain a label with time == 100
         let start_bag = bags.get(&0).expect("start node bag missing");
         assert!(
-            start_bag.labels.iter().any(|l| l.objectives[0] == 100),
-            "start bag must have a label with objectives[0] == 100"
+            start_bag.labels.iter().any(|l| l.objective.time == 100),
+            "start bag must have a label with objective.time == 100"
         );
 
         // Every label at node 1 must have time >= 100 (offset propagates)
         let bag1 = bags.get(&1).expect("node 1 bag missing");
         for label in &bag1.labels {
             assert!(
-                label.objectives[0] >= 100,
-                "node 1 label has objectives[0] = {} < 100",
-                label.objectives[0]
+                label.objective.time >= 100,
+                "node 1 label has objective.time = {} < 100",
+                label.objective.time
             );
         }
     }
@@ -92,7 +95,10 @@ mod tests {
         m.set_node_map(node_map);
         m.set_external_start_node("0".to_string()).unwrap();
         let bags = m.run().unwrap();
-        assert!(bags.contains_key(&0), "result bags must contain internal node 0");
+        assert!(
+            bags.contains_key(&0),
+            "result bags must contain internal node 0"
+        );
     }
 
     #[test]
@@ -165,21 +171,21 @@ mod tests {
     fn test_set_update_label_func() {
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
         let mut m = mlc::MLC::new(&g).unwrap();
-        m.set_update_label_func(|_old, new_label| {
-            let mut updated = new_label.clone();
-            updated.objectives[0] += 1000;
-            updated
+        m.set_update_label_func(|_old, weight| {
+            let mut updated = _old.clone();
+            updated.objective.time += weight.distance_mm;
+            (updated.objective, updated.auxiliary)
         });
         m.set_start_node(0);
         let bags = m.run().unwrap();
 
-        // node 4 is reachable via 4 edges; each step adds 1000 to objectives[0]
+        // node 4 is reachable via 4 edges; each step adds 1000 to objective.time
         let bag4 = bags.get(&4).expect("node 4 bag must exist");
         for label in &bag4.labels {
             assert!(
-                label.objectives[0] >= 4000,
-                "node 4 label has objectives[0] = {} < 4000",
-                label.objectives[0]
+                label.objective.time >= 4000,
+                "node 4 label has objective.time = {} < 4000",
+                label.objective.time
             );
         }
     }
@@ -194,7 +200,10 @@ mod tests {
             m.set_start_node(0);
             let _ = m.run();
         });
-        assert!(result.is_err(), "expected a panic when limits are not initialised");
+        assert!(
+            result.is_err(),
+            "expected a panic when limits are not initialised"
+        );
     }
 
     #[test]
@@ -233,10 +242,10 @@ mod tests {
         let mut start_bags: mlc::Bags<usize> = HashMap::new();
         for &start_node in &[0_usize, 100_usize] {
             let label = Label {
-                objectives: vec![0, 0],
-                auxiliary:  vec![],
-                path:        vec![start_node],
-                node_id:     start_node,
+                objective: Objective::new(0, 0),
+                auxiliary: Auxiliary::new(0, 0, 0),
+                path: vec![start_node],
+                node_id: start_node,
             };
             start_bags.insert(start_node, Bag::new_start_bag(label));
         }
@@ -265,25 +274,43 @@ mod tests {
         let mut limit_reduced_at_least_one = false;
         for (node_id, bag) in &bags_limited {
             let unlimited_count = bags_unlimited
-                .get(node_id).map(|b| b.labels.len()).unwrap_or(0);
-            assert!(bag.labels.len() <= unlimited_count,
-                "node {}: limited={} > unlimited={}", node_id, bag.labels.len(), unlimited_count);
+                .get(node_id)
+                .map(|b| b.labels.len())
+                .unwrap_or(0);
+            assert!(
+                bag.labels.len() <= unlimited_count,
+                "node {}: limited={} > unlimited={}",
+                node_id,
+                bag.labels.len(),
+                unlimited_count
+            );
             if bag.labels.len() < unlimited_count {
                 limit_reduced_at_least_one = true;
             }
         }
-        assert!(limit_reduced_at_least_one,
-            "limit system should prune at least one label in the Brugge graph");
+        assert!(
+            limit_reduced_at_least_one,
+            "limit system should prune at least one label in the Brugge graph"
+        );
 
         // ── 6. Path validity ─────────────────────────────────────────────────
         let mut checked = 0;
         for bag in bags_limited.values().take(50) {
             for label in &bag.labels {
-                assert!(path_is_valid(label, &g),
-                    "invalid path {:?} → {}", label.path, label.node_id);
                 assert!(
-                    label.path.first().map(|&n| n == 0 || n == 100).unwrap_or(true),
-                    "path starts at unexpected node: {:?}", label.path
+                    path_is_valid(label, &g),
+                    "invalid path {:?} → {}",
+                    label.path,
+                    label.node_id
+                );
+                assert!(
+                    label
+                        .path
+                        .first()
+                        .map(|&n| n == 0 || n == 100)
+                        .unwrap_or(true),
+                    "path starts at unexpected node: {:?}",
+                    label.path
                 );
                 checked += 1;
             }
@@ -293,7 +320,8 @@ mod tests {
         // ── 7. POI category nodes are reachable ──────────────────────────────
         let poi_in_results = bags_limited.keys().any(|nid| {
             g.node_weight(NodeIndex::new(*nid))
-                .map(|w| !w.is_empty()).unwrap_or(false)
+                .map(|w| !w.is_empty())
+                .unwrap_or(false)
         });
         assert!(poi_in_results, "no POI category nodes found in result bags");
     }

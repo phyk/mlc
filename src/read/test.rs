@@ -25,9 +25,6 @@ mod tests {
         assert_eq!(g.edge_count(), 8);
         // nodes 0-4
         assert_eq!(g.node_count(), 5);
-        // each edge has 2 objectives (e.g. "(0;1)")
-        let first_edge = g.edge_references().next().unwrap();
-        assert_eq!(first_edge.weight().objectives.len(), 2);
     }
 
     #[test]

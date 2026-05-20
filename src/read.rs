@@ -72,8 +72,7 @@ pub fn read_graph_and_reset_ids(
                 NodeIndex::new(e.u),
                 NodeIndex::new(e.v),
                 WeightsTuple {
-                    objectives: e.weights.clone().0,
-                    auxiliary: e.hidden_weights.clone().map(|w| w.0).unwrap_or(vec![]),
+                    distance_mm: e.weights.clone().0[0],
                 },
             )
         }));
@@ -97,8 +96,7 @@ pub fn read_graph_with_int_ids(path: &str) -> Result<MLCGraph<u8>, Box<dyn Error
             NodeIndex::new(e.u),
             NodeIndex::new(e.v),
             WeightsTuple {
-                objectives: e.weights.clone().0,
-                auxiliary: e.hidden_weights.clone().map(|w| w.0).unwrap_or(vec![]),
+                distance_mm: e.weights.clone().0[0],
             },
         )
     }));

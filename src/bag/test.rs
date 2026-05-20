@@ -1,20 +1,20 @@
 #[cfg(test)]
 mod tests {
     use super::super::*;
-    use std::collections::BinaryHeap;
     use petgraph::{Directed, Graph};
+    use std::collections::BinaryHeap;
 
     #[test]
     fn test_label_ordering() {
         let label_small = Label {
-            objectives: vec![1, 10],
-            auxiliary: vec![],
+            objective: Objective::new(1, 10),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0],
             node_id: 0,
         };
         let label_large = Label {
-            objectives: vec![5, 2],
-            auxiliary: vec![],
+            objective: Objective::new(5, 2),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0],
             node_id: 0,
         };
@@ -23,11 +23,11 @@ mod tests {
         heap.push(label_large);
         heap.push(label_small);
 
-        // min-heap: label with smaller objectives[0] pops first
+        // min-heap: label with smaller objective.time pops first
         let first = heap.pop().unwrap();
-        assert_eq!(first.objectives[0], 1);
+        assert_eq!(first.objective.time, 1);
         let second = heap.pop().unwrap();
-        assert_eq!(second.objectives[0], 5);
+        assert_eq!(second.objective.time, 5);
     }
 
     #[test]
@@ -36,14 +36,14 @@ mod tests {
         use std::hash::{Hash, Hasher};
 
         let label_a = Label {
-            objectives: vec![5, 3],
-            auxiliary: vec![],
+            objective: Objective::new(5, 3),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0, 1, 2],
             node_id: 2,
         };
         let label_b = Label {
-            objectives: vec![5, 3],
-            auxiliary: vec![],
+            objective: Objective::new(5, 3),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![9, 8],
             node_id: 99,
         };
@@ -68,71 +68,73 @@ mod tests {
         let mut g = Graph::<Vec<u8>, WeightsTuple, Directed>::new();
         let n0 = g.add_node(vec![]);
         let n1 = g.add_node(vec![]);
-        g.add_edge(
-            n0,
-            n1,
-            WeightsTuple {
-                objectives: vec![10, 1],
-                auxiliary: vec![],
-            },
-        );
+        g.add_edge(n0, n1, WeightsTuple { distance_mm: 50 });
 
         let start_label = Label {
-            objectives: vec![5, 0],
-            auxiliary: vec![],
+            objective: Objective::new(5, 0),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0],
             node_id: 0,
         };
 
+        let closure = |label: &Label<usize>, weight: &WeightsTuple| {
+            (
+                Objective::new(
+                    label.objective.time + weight.distance_mm / 5,
+                    label.objective.cost + 1,
+                ),
+                label.auxiliary.clone(),
+            )
+        };
         // with disable_path=false
         let edge = g.edges(n0).next().unwrap();
-        let new_label = start_label.new_along(&edge, false);
-        assert_eq!(new_label.objectives, vec![15, 1]);
+        let new_label = start_label.new_along(&edge, false, closure);
+        assert_eq!(new_label.objective, Objective::new(15, 1));
         assert_eq!(new_label.path, vec![0, 1]);
         assert_eq!(new_label.node_id, 1);
 
         // with disable_path=true
         let edge = g.edges(n0).next().unwrap();
-        let new_label_no_path = start_label.new_along(&edge, true);
-        assert_eq!(new_label_no_path.objectives, vec![15, 1]);
+        let new_label_no_path = start_label.new_along(&edge, true, closure);
+        assert_eq!(new_label_no_path.objective, Objective::new(15, 1));
         assert_eq!(new_label_no_path.path, vec![]);
     }
 
     #[test]
     fn test_weakly_dominates() {
         let label1 = Label {
-            objectives: vec![1, 2, 3],
-            auxiliary: vec![],
+            objective: Objective::new(1, 2),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0, 1, 2],
             node_id: 2,
         };
         let label2 = Label {
-            objectives: vec![1, 2, 3],
-            auxiliary: vec![],
+            objective: Objective::new(1, 2),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0, 1, 2],
             node_id: 2,
         };
         let label3 = Label {
-            objectives: vec![2, 3, 4],
-            auxiliary: vec![],
+            objective: Objective::new(2, 3),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0, 1, 2],
             node_id: 2,
         };
         let label4 = Label {
-            objectives: vec![1, 2, 4],
-            auxiliary: vec![],
+            objective: Objective::new(1, 3),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0, 1, 2],
             node_id: 2,
         };
         let label_bug_1 = Label {
-            objectives: vec![1852375, 0],
-            auxiliary: vec![],
+            objective: Objective::new(350274, 0),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0],
             node_id: 1,
         };
         let label_bug_2 = Label {
-            objectives: vec![2003938, 0],
-            auxiliary: vec![],
+            objective: Objective::new(357024742, 0),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0],
             node_id: 1,
         };
@@ -150,14 +152,14 @@ mod tests {
     fn test_bag_add_if_necessary() {
         let mut bag = Bag::new_empty();
         let label1 = Label {
-            objectives: vec![1, 2, 3],
-            auxiliary: vec![],
+            objective: Objective::new(1, 2),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0, 1, 2],
             node_id: 2,
         };
         let label2 = Label {
-            objectives: vec![2, 3, 4],
-            auxiliary: vec![],
+            objective: Objective::new(2, 3),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0, 1, 2],
             node_id: 2,
         };
@@ -169,11 +171,12 @@ mod tests {
         assert_eq!(bag.labels.len(), 1);
 
         let label3 = Label {
-            objectives: vec![0, 1, 6],
-            auxiliary: vec![],
+            objective: Objective::new(2, 1),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0, 1, 2],
             node_id: 2,
         };
+        assert!(label1 > label3);
         assert!(bag.add_if_necessary(label3.clone()));
         assert_eq!(bag.labels.len(), 2);
 
@@ -186,20 +189,20 @@ mod tests {
     fn test_bag_remove_dominated_by() {
         let mut bag = Bag::new_empty();
         let label1 = Label {
-            objectives: vec![1, 2, 5],
-            auxiliary: vec![],
+            objective: Objective::new(1, 5),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0, 1, 2],
             node_id: 2,
         };
         let label2 = Label {
-            objectives: vec![2, 3, 4],
-            auxiliary: vec![],
+            objective: Objective::new(4, 2),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0, 1, 2],
             node_id: 2,
         };
         let label3 = Label {
-            objectives: vec![0, 0, 0],
-            auxiliary: vec![],
+            objective: Objective::new(0, 0),
+            auxiliary: Auxiliary::new_empty(),
             path: vec![0, 1, 2],
             node_id: 2,
         };
