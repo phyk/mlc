@@ -342,4 +342,83 @@ mod tests {
         });
         assert!(poi_in_results, "no POI category nodes found in result bags");
     }
+
+    #[test]
+    fn test_set_existing_bags_prunes_propagated_labels() {
+        // Tiny 2-node graph: 0 → 1 with distance_mm = 10.
+        // Pre-populate node 1 with a dominating label (0, 0) via set_existing_bags.
+        // Seed node 0 with a worse label (100, 0). The propagation 0 → 1 yields
+        // (110, 0), which is dominated by the existing (0, 0) and should be
+        // pruned at insertion — node 1's bag must remain {(0, 0)}.
+        let mut g = Graph::<Vec<u8>, WeightsTuple, Directed>::new();
+        let n0 = g.add_node(vec![]);
+        let n1 = g.add_node(vec![]);
+        g.add_edge(n0, n1, WeightsTuple { distance_mm: 10 });
+
+        let mut existing: mlc::Bags<usize> = HashMap::new();
+        existing.insert(
+            1,
+            Bag::new_start_bag(Label {
+                objective: Objective::new(0, 0),
+                auxiliary: Auxiliary::new(0, 0, 0, None),
+                path: vec![1],
+                node_id: 1,
+            }),
+        );
+
+        let mut seed: mlc::Bags<usize> = HashMap::new();
+        seed.insert(
+            0,
+            Bag::new_start_bag(Label {
+                objective: Objective::new(100, 0),
+                auxiliary: Auxiliary::new(0, 0, 0, None),
+                path: vec![0],
+                node_id: 0,
+            }),
+        );
+
+        let mut m = mlc::MLC::new(&g).unwrap();
+        m.set_existing_bags(existing);
+        m.set_seed_bags(seed);
+        let bags = m.run().unwrap();
+
+        let bag1 = bags.get(&1).expect("node 1 bag must exist");
+        assert_eq!(bag1.labels.len(), 1, "node 1 bag should contain only the dominating existing label");
+        let only = bag1.labels.iter().next().unwrap();
+        assert_eq!(only.objective.time, 0);
+        assert_eq!(only.objective.cost, 0);
+    }
+
+    #[test]
+    fn test_set_bags_back_compat() {
+        // set_bags(b) should produce the same final bags as
+        // set_existing_bags(b.clone()) + set_seed_bags(b).
+        let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
+
+        let mut start: mlc::Bags<usize> = HashMap::new();
+        start.insert(
+            0,
+            Bag::new_start_bag(Label {
+                objective: Objective::new(0, 0),
+                auxiliary: Auxiliary::new(0, 0, 0, None),
+                path: vec![0],
+                node_id: 0,
+            }),
+        );
+
+        let bags_combined = {
+            let mut m = mlc::MLC::new(&g).unwrap();
+            m.set_bags(start.clone());
+            m.run().unwrap().clone()
+        };
+
+        let bags_split = {
+            let mut m = mlc::MLC::new(&g).unwrap();
+            m.set_existing_bags(start.clone());
+            m.set_seed_bags(start);
+            m.run().unwrap().clone()
+        };
+
+        assert_eq!(bags_combined, bags_split);
+    }
 }

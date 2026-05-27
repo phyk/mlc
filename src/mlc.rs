@@ -131,33 +131,70 @@ impl MLC<'_> {
         self.enable_limit = enable_limit;
     }
 
-    /// Sets the starting bags and derives the starting queue from them.
-    ///
-    /// The bags should be in a consistent state, meaning that the labels in the bags should
-    /// not dominate each other.
-    ///
-    /// # Arguments
-    ///
-    /// * `bags` - A HashMap of bags, where the key is the node id and the value is the bag.
-    pub fn set_bags(&mut self, bags: Bags<usize>) {
-        assert!(!bags.is_empty());
+    /// Sets the dominance/pruning state without pushing labels to the queue.
+    /// Labels added later via `set_seed_bags` are dominance-checked against
+    /// this state at insertion time, avoiding propagation of dominated labels.
+    pub fn set_existing_bags(&mut self, bags: Bags<usize>) {
         self.bags = bags;
-        let mut label_node_tuples = vec![];
-        for bag in self.bags.values() {
-            for label in &bag.labels {
-                let node_weight = self
-                    .graph
-                    .node_weight(NodeIndex::new(label.node_id))
-                    .unwrap();
-                if self.enable_limit && node_weight.len() > 0 {
-                    label_node_tuples.push((label.clone(), node_weight));
+        if self.enable_limit {
+            let mut updates: Vec<(Label<usize>, Vec<u8>)> = vec![];
+            for bag in self.bags.values() {
+                for label in &bag.labels {
+                    let nw = self
+                        .graph
+                        .node_weight(NodeIndex::new(label.node_id))
+                        .unwrap();
+                    if !nw.is_empty() {
+                        updates.push((label.clone(), nw.clone()));
+                    }
                 }
-                self.queue.push(label.clone());
+            }
+            for (label, nw) in updates {
+                self.update_limits(&label, &nw);
             }
         }
-        for (label, node_weight) in label_node_tuples {
-            self.update_limits(&label, node_weight);
+    }
+
+    /// Pushes seed labels onto the propagation queue. Each label is also
+    /// inserted into the existing bag state via `add_if_necessary` — a seed
+    /// label that is already dominated by the existing state is not stored in
+    /// the bag, and the stale-label check in `run()` will skip it when it
+    /// surfaces on the queue. Use this after `set_existing_bags`.
+    pub fn set_seed_bags(&mut self, seed: Bags<usize>) {
+        let mut limit_updates: Vec<(Label<usize>, Vec<u8>)> = vec![];
+        for bag in seed.into_values() {
+            for label in bag.labels {
+                {
+                    let target = self
+                        .bags
+                        .entry(label.node_id)
+                        .or_insert_with(Bag::new_empty);
+                    target.add_if_necessary(label.clone());
+                }
+                if self.enable_limit {
+                    let nw = self
+                        .graph
+                        .node_weight(NodeIndex::new(label.node_id))
+                        .unwrap();
+                    if !nw.is_empty() {
+                        limit_updates.push((label.clone(), nw.clone()));
+                    }
+                }
+                self.queue.push(label);
+            }
         }
+        for (label, nw) in limit_updates {
+            self.update_limits(&label, &nw);
+        }
+    }
+
+    /// Convenience wrapper: sets both the existing-bag state and the seed
+    /// queue from the same bags. Behaviourally identical to the original
+    /// `set_bags` — every label participates in dominance and propagation.
+    pub fn set_bags(&mut self, bags: Bags<usize>) {
+        assert!(!bags.is_empty());
+        self.set_existing_bags(bags.clone());
+        self.set_seed_bags(bags);
     }
 
     /// Constructs a start label for `node` with the given initial objective values.
