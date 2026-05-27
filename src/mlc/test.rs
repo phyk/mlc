@@ -188,9 +188,9 @@ mod tests {
     fn test_set_update_label_func() {
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
         let mut m = mlc::MLC::new(&g).unwrap();
-        m.set_update_label_func(|_old, weight| {
-            let mut updated = _old.clone();
-            updated.objective.time += weight.distance_mm;
+        m.set_update_label_func(|old, _weight| {
+            let mut updated = old.clone();
+            updated.objective.time += 1000;
             (updated.objective, updated.auxiliary)
         });
         m.set_start_node(0);
