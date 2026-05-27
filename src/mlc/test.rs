@@ -260,7 +260,7 @@ mod tests {
         for &start_node in &[0_usize, 100_usize] {
             let label = Label {
                 objective: Objective::new(0, 0),
-                auxiliary: Auxiliary::new(0, 0, 0),
+                auxiliary: Auxiliary::new(0, 0, 0, None),
                 path: vec![start_node],
                 node_id: start_node,
             };

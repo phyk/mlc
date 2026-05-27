@@ -74,6 +74,7 @@ fn simple_add_func(label: &Label<usize>, weights: &WeightsTuple) -> (Objective, 
             weights.distance_mm + label.auxiliary.dist_walk,
             label.auxiliary.dist_bike,
             label.auxiliary.dist_car,
+            label.auxiliary.last_routed_mode,
         ),
     )
 }
@@ -168,7 +169,7 @@ impl MLC<'_> {
         };
         Label {
             objective: Objective::new(time, cost),
-            auxiliary: Auxiliary::new(0, 0, 0),
+            auxiliary: Auxiliary::new(0, 0, 0, None),
             path,
             node_id: node,
         }
@@ -413,7 +414,7 @@ pub fn read_bags(path: &str) -> Result<Bags<usize>, Box<dyn Error>> {
         let aux = |i: usize| label_entry.values.get(i).copied().unwrap_or(0);
         let label = Label {
             objective: Objective::new(label_entry.values[0], label_entry.values[1]),
-            auxiliary: Auxiliary::new(aux(2), aux(3), aux(4)),
+            auxiliary: Auxiliary::new(aux(2), aux(3), aux(4), None),
             path: label_entry.path.clone(),
             node_id: label_entry.node_id,
         };

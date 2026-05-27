@@ -56,11 +56,22 @@ pub struct Objective {
     pub cost: u64,
 }
 
+/// The transport mode used on the most recent edge of a label's path.
+/// Tracked in `Auxiliary` so mode-transition costs (e.g., car switch_time)
+/// can fire only on actual transitions.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum LastRoutedMode {
+    Walking,
+    Cycling,
+    Car,
+}
+
 #[derive(Debug, Clone)]
 pub struct Auxiliary {
     pub dist_walk: u64,
     pub dist_bike: u64,
     pub dist_car: u64,
+    pub last_routed_mode: Option<LastRoutedMode>,
 }
 
 impl Add for Auxiliary {
@@ -70,16 +81,23 @@ impl Add for Auxiliary {
             dist_bike: self.dist_bike + rhs.dist_bike,
             dist_car: self.dist_car + rhs.dist_car,
             dist_walk: self.dist_walk + rhs.dist_walk,
+            last_routed_mode: rhs.last_routed_mode.or(self.last_routed_mode),
         }
     }
 }
 
 impl Auxiliary {
-    pub fn new(dist_walk: u64, dist_bike: u64, dist_car: u64) -> Auxiliary {
+    pub fn new(
+        dist_walk: u64,
+        dist_bike: u64,
+        dist_car: u64,
+        last_routed_mode: Option<LastRoutedMode>,
+    ) -> Auxiliary {
         Auxiliary {
             dist_walk,
             dist_bike,
             dist_car,
+            last_routed_mode,
         }
     }
 
@@ -88,6 +106,7 @@ impl Auxiliary {
             dist_walk: 0,
             dist_bike: 0,
             dist_car: 0,
+            last_routed_mode: None,
         }
     }
 }
