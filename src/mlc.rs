@@ -182,7 +182,7 @@ impl MLC<'_> {
     }
 
     pub fn set_start_node_with_time(&mut self, start_node: usize, time: u64) {
-        let start_label = self.make_start_label(start_node, 0, time);
+        let start_label = self.make_start_label(start_node, time, 0);
         self.queue.push(start_label.clone());
         self.bags
             .insert(start_node, Bag::new_start_bag(start_label));
@@ -410,13 +410,10 @@ pub fn read_bags(path: &str) -> Result<Bags<usize>, Box<dyn Error>> {
     let mut bags: Bags<usize> = HashMap::new();
     for line in read_to_string(path)?.lines().skip(1) {
         let label_entry: LabelEntry = line.parse()?;
+        let aux = |i: usize| label_entry.values.get(i).copied().unwrap_or(0);
         let label = Label {
             objective: Objective::new(label_entry.values[0], label_entry.values[1]),
-            auxiliary: Auxiliary::new(
-                label_entry.values[2],
-                label_entry.values[3],
-                label_entry.values[4],
-            ),
+            auxiliary: Auxiliary::new(aux(2), aux(3), aux(4)),
             path: label_entry.path.clone(),
             node_id: label_entry.node_id,
         };
