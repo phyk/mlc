@@ -119,17 +119,7 @@ impl PartialOrd for Objective {
 
 impl Ord for Objective {
     fn cmp(&self, other: &Self) -> Ordering {
-        let ordering = self.time.cmp(&other.time);
-        let second_ordering = self.cost.cmp(&other.cost);
-        if (ordering.is_gt() & second_ordering.is_ge())
-            || (second_ordering.is_gt() & ordering.is_ge())
-        {
-            Ordering::Greater
-        } else if ordering.is_eq() & second_ordering.is_eq() {
-            Ordering::Equal
-        } else {
-            Ordering::Less
-        }
+        self.time.cmp(&other.time).then(self.cost.cmp(&other.cost))
     }
 }
 
@@ -177,31 +167,20 @@ impl Label<NodeId> {
     // this is the case if it either strictly dominates the other label
     // or if it is equal to the other label
     fn weakly_dominates(&self, other: &Label<NodeId>) -> bool {
-        self.objective <= other.objective
+        self.objective.time <= other.objective.time
+            && self.objective.cost <= other.objective.cost
     }
 }
 
 impl<T> Ord for Label<T> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        // lexicographical order, but the smaller the better
-        // we need a "min-heap" as queue
-        match self.objective.cmp(&other.objective) {
-            Ordering::Less => Ordering::Greater,
-            Ordering::Greater => Ordering::Less,
-            Ordering::Equal => Ordering::Equal,
-        }
+       self.objective.cmp(&other.objective)
     }
 }
 
 impl<T> PartialOrd for Label<T> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        // lexicographical order, but the smaller the better
-        // we need a "min-heap" as queue
-        match self.objective.cmp(&other.objective) {
-            Ordering::Less => Some(Ordering::Less),
-            Ordering::Greater => Some(Ordering::Greater),
-            Ordering::Equal => Some(Ordering::Equal),
-        }
+        Some(self.cmp(other))
     }
 }
 
