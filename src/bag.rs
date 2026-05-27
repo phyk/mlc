@@ -64,6 +64,8 @@ pub enum LastRoutedMode {
     Walking,
     Cycling,
     Car,
+    SharedBike,
+    SharedScooter,
 }
 
 #[derive(Debug, Clone)]
