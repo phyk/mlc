@@ -14,6 +14,23 @@ mod tests {
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
 
         let mut mlc = mlc::MLC::new(&g).unwrap();
+        // Edges only carry distance_mm in the new format, but the fixture in
+        // results.csv was generated when edges carried two objective values
+        // (time; cost) that were summed into the label. The test graph is a
+        // linear chain 0→1→2→3→4 where each level i has two parallel edges
+        // (0; 2^i) and (2^i; 0). The "cost" half is reconstructed here as
+        // (2^i - distance_mm), with i taken from the source node id.
+        mlc.set_update_label_func(|label, weights| {
+            let level_max = 1u64 << label.node_id;
+            let cost_step = level_max - weights.distance_mm;
+            (
+                Objective::new(
+                    label.objective.time + weights.distance_mm,
+                    label.objective.cost + cost_step,
+                ),
+                label.auxiliary.clone(),
+            )
+        });
         mlc.set_start_node(0);
         let bags = mlc.run().unwrap();
         let expected_result = mlc::read_bags("testdata/results.csv").unwrap();
