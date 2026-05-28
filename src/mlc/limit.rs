@@ -9,7 +9,7 @@ use std::collections::HashMap;
 /// search when a label has already exceeded every known limit for every category.
 ///
 /// The limit system assumes exactly 2 objectives: time (index 0) and cost (index 1).
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Limits<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> {
     pub limits: HashMap<T, Vec<Limit>>,
     /// Cache mapping cost → max-time limit to avoid repeated `determine_limit` calls.
@@ -19,7 +19,7 @@ pub struct Limits<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> {
 /// A single (cost, time) constraint point within a category's Pareto frontier.
 ///
 /// A label exceeds a limit when its cost is ≥ `cost` and its time is ≥ `time`.
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Limit {
     pub cost: u64,
     pub time: u64,

@@ -16,7 +16,7 @@ use std::num::ParseIntError;
 use std::str::FromStr;
 use std::time::Instant;
 
-use self::limit::Limits;
+pub use self::limit::Limits;
 
 mod limit;
 mod test;
@@ -133,6 +133,22 @@ impl MLC<'_> {
 
     pub fn set_enable_limit(&mut self, enable_limit: bool) {
         self.enable_limit = enable_limit;
+    }
+
+    /// Replace the internal `Limits` with externally-managed state. Used to
+    /// thread one shared `Limits<u8>` across successive `MLC` instances — POI
+    /// categories live on the walking graph only, so cycling/car/shared MLC
+    /// instances must be seeded with limits from elsewhere to avoid the
+    /// "limits not initialised" panic in `run`.
+    pub fn set_limits(&mut self, limits: Limits<u8>) {
+        self.limits = limits;
+    }
+
+    /// Move the (potentially refined) limits out of this `MLC`. The caller
+    /// typically stores them in shared state so the next `MLC` instance can
+    /// continue from where this one left off.
+    pub fn take_limits(&mut self) -> Limits<u8> {
+        std::mem::replace(&mut self.limits, Limits::new())
     }
 
     /// Sets the dominance/pruning state without pushing labels to the queue.
