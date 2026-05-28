@@ -200,9 +200,9 @@ impl MLC<'_> {
     /// Constructs a start label for `node` with the given initial objective values.
     fn make_start_label(&self, node: usize, time: u64, cost: u64) -> Label<usize> {
         let path = if self.disable_paths {
-            vec![]
+            None
         } else {
-            vec![node]
+            crate::bag::path_extend(&None, node)
         };
         Label {
             objective: Objective::new(time, cost),
@@ -350,15 +350,17 @@ impl MLC<'_> {
                 labels: bag
                     .labels
                     .iter()
-                    .map(|label| Label {
-                        node_id: translated_node_id.clone(),
-                        path: label
-                            .path
-                            .iter()
-                            .map(|n| node_map.get_by_right(n).unwrap().to_string())
-                            .collect(),
-                        objective: label.objective.clone(),
-                        auxiliary: label.auxiliary.clone(),
+                    .map(|label| {
+                        let translated_path: Vec<String> = crate::bag::path_to_vec(&label.path)
+                            .into_iter()
+                            .map(|n| node_map.get_by_right(&n).unwrap().to_string())
+                            .collect();
+                        Label {
+                            node_id: translated_node_id.clone(),
+                            path: crate::bag::path_from_vec(translated_path),
+                            objective: label.objective.clone(),
+                            auxiliary: label.auxiliary.clone(),
+                        }
                     })
                     .collect(),
             };
@@ -452,7 +454,7 @@ pub fn read_bags(path: &str) -> Result<Bags<usize>, Box<dyn Error>> {
         let label = Label {
             objective: Objective::new(label_entry.values[0], label_entry.values[1]),
             auxiliary: Auxiliary::new(aux(2), aux(3), aux(4), None),
-            path: label_entry.path.clone(),
+            path: crate::bag::path_from_vec(label_entry.path.clone()),
             node_id: label_entry.node_id,
         };
         let bag = bags
@@ -463,7 +465,7 @@ pub fn read_bags(path: &str) -> Result<Bags<usize>, Box<dyn Error>> {
     Ok(bags)
 }
 
-pub fn write_bags<T: Eq + Hash + Display>(
+pub fn write_bags<T: Eq + Hash + Display + Clone>(
     bags: &Bags<T>,
     path: &str,
 ) -> Result<(), Box<dyn Error>> {
@@ -483,8 +485,7 @@ pub fn write_bags<T: Eq + Hash + Display>(
             let line = format!(
                 "{}|{}|{}\n",
                 label.node_id,
-                label
-                    .path
+                crate::bag::path_to_vec(&label.path)
                     .iter()
                     .map(|n| n.to_string())
                     .collect::<Vec<String>>()

@@ -6,6 +6,7 @@ use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::ops::Add;
+use std::rc::Rc;
 
 pub type Weight = u64;
 pub type NodeId = usize;
@@ -37,6 +38,56 @@ impl WeightsTuple {
     }
 }
 
+/// A single hop in a label's traversal history. Each node points back at the
+/// previous node via `parent`, so labels sharing a path prefix share the same
+/// `PathNode` allocations — extending a path is an `Rc::clone` instead of a
+/// `Vec` copy + push.
+#[derive(Debug)]
+pub struct PathNode<T> {
+    pub node_id: T,
+    pub parent: Option<Rc<PathNode<T>>>,
+}
+
+/// A label's traversal history. `None` ⇔ "no path recorded" (used when
+/// `disable_paths` is set). Walking `parent` links from the head yields nodes
+/// in reverse (terminal → start); `path_to_vec` materialises them start → end.
+pub type Path<T> = Option<Rc<PathNode<T>>>;
+
+/// Build a Path from a Vec ordered start→end. The returned head's `node_id`
+/// corresponds to `v.last()`. Used for the few callers (debug `read_bags`,
+/// tests) that still produce paths as Vecs.
+pub fn path_from_vec<T>(v: Vec<T>) -> Path<T> {
+    let mut cur: Path<T> = None;
+    for node_id in v {
+        cur = Some(Rc::new(PathNode {
+            node_id,
+            parent: cur,
+        }));
+    }
+    cur
+}
+
+/// Materialise a Path into a Vec ordered start→end. Walks the linked list and
+/// reverses. O(path_len) — used at serialisation time only.
+pub fn path_to_vec<T: Clone>(path: &Path<T>) -> Vec<T> {
+    let mut out = Vec::new();
+    let mut cur = path.as_deref();
+    while let Some(p) = cur {
+        out.push(p.node_id.clone());
+        cur = p.parent.as_deref();
+    }
+    out.reverse();
+    out
+}
+
+/// Extend a path by one node, sharing the prior suffix via `Rc::clone`.
+pub fn path_extend<T>(parent: &Path<T>, node_id: T) -> Path<T> {
+    Some(Rc::new(PathNode {
+        node_id,
+        parent: parent.clone(),
+    }))
+}
+
 /// A Pareto label representing a route from the origin to `node_id`.
 ///
 /// `objectives` and `auxiliary` are accumulated sums of edge weights along the path.
@@ -46,7 +97,7 @@ impl WeightsTuple {
 pub struct Label<T> {
     pub objective: Objective,
     pub auxiliary: Auxiliary,
-    pub path: Vec<T>,
+    pub path: Path<T>,
     pub node_id: T,
 }
 
@@ -167,15 +218,12 @@ impl Label<NodeId> {
         let weight = edge.weight();
         let (objective, auxiliary) = update_label_func(self, weight);
 
-        let mut path = if disable_path {
-            vec![]
-        } else {
-            self.path.clone()
-        };
         let target_node_id = edge.target().index();
-        if !disable_path {
-            path.push(target_node_id);
-        }
+        let path = if disable_path {
+            None
+        } else {
+            path_extend(&self.path, target_node_id)
+        };
         Label {
             objective,
             path,

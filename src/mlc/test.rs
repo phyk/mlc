@@ -2,7 +2,7 @@
 mod tests {
     use crate::bag::Auxiliary;
     use crate::bag::Objective;
-    use crate::bag::{Bag, Label, WeightsTuple};
+    use crate::bag::{path_from_vec, path_to_vec, Bag, Label, WeightsTuple};
     use crate::mlc;
     use crate::read;
     use petgraph::graph::NodeIndex;
@@ -67,9 +67,8 @@ mod tests {
     fn path_is_valid(label: &Label<usize>, g: &Graph<Vec<u8>, WeightsTuple, Directed>) -> bool {
         // path contains the full route including the destination node,
         // so consecutive pairs are the edges that must exist in the graph.
-        label
-            .path
-            .windows(2)
+        let v = path_to_vec(&label.path);
+        v.windows(2)
             .all(|w| g.contains_edge(NodeIndex::new(w[0]), NodeIndex::new(w[1])))
     }
 
@@ -152,7 +151,7 @@ mod tests {
         for bag in bags.values() {
             for label in &bag.labels {
                 assert!(
-                    label.path.is_empty(),
+                    label.path.is_none(),
                     "expected empty path when disable_paths=true, got {:?}",
                     label.path
                 );
@@ -261,7 +260,7 @@ mod tests {
             let label = Label {
                 objective: Objective::new(0, 0),
                 auxiliary: Auxiliary::new(0, 0, 0, None),
-                path: vec![start_node],
+                path: path_from_vec(vec![start_node]),
                 node_id: start_node,
             };
             start_bags.insert(start_node, Bag::new_start_bag(label));
@@ -320,14 +319,14 @@ mod tests {
                     label.path,
                     label.node_id
                 );
+                let path_vec = path_to_vec(&label.path);
                 assert!(
-                    label
-                        .path
+                    path_vec
                         .first()
                         .map(|&n| n == 0 || n == 100)
                         .unwrap_or(true),
                     "path starts at unexpected node: {:?}",
-                    label.path
+                    path_vec
                 );
                 checked += 1;
             }
@@ -361,7 +360,7 @@ mod tests {
             Bag::new_start_bag(Label {
                 objective: Objective::new(0, 0),
                 auxiliary: Auxiliary::new(0, 0, 0, None),
-                path: vec![1],
+                path: path_from_vec(vec![1]),
                 node_id: 1,
             }),
         );
@@ -372,7 +371,7 @@ mod tests {
             Bag::new_start_bag(Label {
                 objective: Objective::new(100, 0),
                 auxiliary: Auxiliary::new(0, 0, 0, None),
-                path: vec![0],
+                path: path_from_vec(vec![0]),
                 node_id: 0,
             }),
         );
@@ -401,7 +400,7 @@ mod tests {
             Bag::new_start_bag(Label {
                 objective: Objective::new(0, 0),
                 auxiliary: Auxiliary::new(0, 0, 0, None),
-                path: vec![0],
+                path: path_from_vec(vec![0]),
                 node_id: 0,
             }),
         );
