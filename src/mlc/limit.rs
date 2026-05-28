@@ -8,11 +8,19 @@ use std::collections::HashMap;
 /// (cost, time) pairs observed at constrained nodes, enabling early stopping of the MLC
 /// search when a label has already exceeded every known limit for every category.
 ///
+/// Contract — the walking step holds the only mutable reference. Non-walking steps clone
+/// the current `Limits` and treat it as a read-only upper bound on time (per cost). The
+/// walking step starts from that snapshot and refines it: a fresh `(cost, time)` point
+/// that no existing limit dominates is added; existing points it dominates are removed.
+///
 /// The limit system assumes exactly 2 objectives: time (index 0) and cost (index 1).
 #[derive(Debug, Clone)]
 pub struct Limits<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> {
     pub limits: HashMap<T, Vec<Limit>>,
     /// Cache mapping cost → max-time limit to avoid repeated `determine_limit` calls.
+    /// Invalidated surgically by `update_limit` — only entries with `query_cost ≥ c` for
+    /// the inserted point `(c, t)` are dropped; entries for `q < c` are provably unaffected
+    /// (the new point doesn't qualify, and points it removed didn't qualify either).
     limit_cache: HashMap<u64, u64>,
 }
 
@@ -57,7 +65,7 @@ impl<T: std::cmp::Eq + std::hash::Hash + std::marker::Copy> Limits<T> {
 
         limits.push(limit);
 
-        self.limit_cache.clear();
+        self.limit_cache.retain(|&q, _| q < cost);
 
         return true;
     }
