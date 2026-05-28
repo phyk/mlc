@@ -34,7 +34,28 @@ mod tests {
         mlc.set_start_node(0);
         let bags = mlc.run().unwrap();
         let expected_result = mlc::read_bags("testdata/results.csv").unwrap();
-        assert!(bags == &expected_result);
+        // Bag's derived PartialEq is order-sensitive on the inner Vec<Label>,
+        // but the insertion order out of the MLC main loop depends on HashMap
+        // iteration order. Compare per-node label sets (keyed by objective).
+        assert_eq!(bags.len(), expected_result.len());
+        for (node_id, expected_bag) in &expected_result {
+            let actual_bag = bags
+                .get(node_id)
+                .unwrap_or_else(|| panic!("node {} missing from actual bags", node_id));
+            let mut actual_objs: Vec<_> = actual_bag
+                .labels
+                .iter()
+                .map(|l| (l.objective.time, l.objective.cost))
+                .collect();
+            let mut expected_objs: Vec<_> = expected_bag
+                .labels
+                .iter()
+                .map(|l| (l.objective.time, l.objective.cost))
+                .collect();
+            actual_objs.sort();
+            expected_objs.sort();
+            assert_eq!(actual_objs, expected_objs, "node {} labels diverge", node_id);
+        }
     }
 
     fn read_node_categories(path: &str) -> HashMap<usize, Vec<u8>> {
