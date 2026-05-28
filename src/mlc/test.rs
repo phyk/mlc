@@ -255,7 +255,7 @@ mod tests {
 
         // ── 1. Pre-initialised bags (set_bags) ────────────────────────────────
         // Simulate two origins that were already reached (e.g. from a prior pass)
-        let mut start_bags: mlc::Bags<usize> = HashMap::new();
+        let mut start_bags: mlc::Bags<usize> = mlc::Bags::default();
         for &start_node in &[0_usize, 100_usize] {
             let label = Label {
                 objective: Objective::new(0, 0),
@@ -354,7 +354,7 @@ mod tests {
         let n1 = g.add_node(vec![]);
         g.add_edge(n0, n1, WeightsTuple { distance_mm: 10 });
 
-        let mut existing: mlc::Bags<usize> = HashMap::new();
+        let mut existing: mlc::Bags<usize> = mlc::Bags::default();
         existing.insert(
             1,
             Bag::new_start_bag(Label {
@@ -365,7 +365,7 @@ mod tests {
             }),
         );
 
-        let mut seed: mlc::Bags<usize> = HashMap::new();
+        let mut seed: mlc::Bags<usize> = mlc::Bags::default();
         seed.insert(
             0,
             Bag::new_start_bag(Label {
@@ -394,7 +394,7 @@ mod tests {
         // set_existing_bags(b.clone()) + set_seed_bags(b).
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
 
-        let mut start: mlc::Bags<usize> = HashMap::new();
+        let mut start: mlc::Bags<usize> = mlc::Bags::default();
         start.insert(
             0,
             Bag::new_start_bag(Label {

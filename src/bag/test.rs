@@ -207,8 +207,8 @@ mod tests {
             node_id: 2,
         };
 
-        bag.labels.insert(label1);
-        bag.labels.insert(label2);
+        bag.labels.push(label1);
+        bag.labels.push(label2);
         assert_eq!(bag.labels.len(), 2);
 
         bag.remove_dominated_by(&label3);

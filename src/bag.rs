@@ -3,7 +3,6 @@ mod test;
 use petgraph::graph::EdgeReference;
 use petgraph::visit::EdgeRef;
 use std::cmp::Ordering;
-use std::collections::HashSet;
 use std::hash::Hash;
 use std::ops::Add;
 use std::rc::Rc;
@@ -268,22 +267,25 @@ impl<T> Hash for Label<T> {
 }
 
 /// Holds the Pareto-optimal (non-dominated) set of labels for a single node.
+///
+/// `labels` is a plain `Vec` (not a `HashSet`): Pareto fronts are tiny —
+/// usually a handful of labels — so contiguous-memory linear scans beat
+/// SipHash + bucket chasing. `add_if_necessary` guarantees no two labels in
+/// the Vec are weakly comparable, so duplicates by objective never appear.
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Bag<T: Eq + Hash> {
-    pub labels: HashSet<Label<T>>,
+pub struct Bag<T> {
+    pub labels: Vec<Label<T>>,
 }
 
 impl Bag<NodeId> {
     pub fn new_start_bag(start_label: Label<NodeId>) -> Bag<NodeId> {
-        let mut labels = HashSet::new();
-        labels.insert(start_label);
-        Bag { labels }
+        Bag {
+            labels: vec![start_label],
+        }
     }
 
     pub fn new_empty() -> Bag<NodeId> {
-        Bag {
-            labels: HashSet::new(),
-        }
+        Bag { labels: Vec::new() }
     }
 
     pub fn add_if_necessary(&mut self, label: Label<NodeId>) -> bool {
@@ -291,17 +293,12 @@ impl Bag<NodeId> {
             return false;
         }
         self.remove_dominated_by(&label);
-        self.labels.insert(label);
+        self.labels.push(label);
         true
     }
 
     pub fn content_dominates(&self, label: &Label<NodeId>) -> bool {
-        for l in &self.labels {
-            if l.weakly_dominates(label) {
-                return true;
-            }
-        }
-        false
+        self.labels.iter().any(|l| l.weakly_dominates(label))
     }
 
     fn remove_dominated_by(&mut self, label: &Label<NodeId>) {

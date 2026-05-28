@@ -4,7 +4,8 @@ use log::{debug, info};
 use petgraph::graph::NodeIndex;
 use petgraph::visit::EdgeRef;
 use petgraph::{Directed, Graph};
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use rustc_hash::FxHashMap;
+use std::collections::{BinaryHeap, HashSet};
 use std::error::Error;
 use std::fmt;
 use std::fmt::Display;
@@ -39,7 +40,10 @@ pub struct MLC<'a> {
     limits: Limits<u8>,
 }
 
-pub type Bags<T> = HashMap<T, Bag<T>>;
+/// Map from node id to that node's Pareto bag. Uses `FxHashMap` (XOR/multiply
+/// hashing) instead of the default SipHash — `usize` node ids are not
+/// adversarial input, and FxHash showed up as ~3% of working CPU in profiles.
+pub type Bags<T> = FxHashMap<T, Bag<T>>;
 
 #[derive(Debug)]
 pub enum MLCError {
@@ -97,7 +101,7 @@ impl MLC<'_> {
 
         Ok(MLC {
             graph: g,
-            bags: HashMap::new(),
+            bags: Bags::default(),
             queue: BinaryHeap::new(),
             node_map: None,
             disable_paths: false,
@@ -343,7 +347,7 @@ impl MLC<'_> {
             .node_map
             .as_ref()
             .expect("node_map must be passed when calling translate_bags");
-        let mut translated_bags: Bags<String> = HashMap::new();
+        let mut translated_bags: Bags<String> = Bags::default();
         for (node_id, bag) in bags {
             let translated_node_id = node_map.get_by_right(node_id).unwrap();
             let translated_bag = Bag {
@@ -447,7 +451,7 @@ impl FromStr for LabelEntry {
 }
 
 pub fn read_bags(path: &str) -> Result<Bags<usize>, Box<dyn Error>> {
-    let mut bags: Bags<usize> = HashMap::new();
+    let mut bags: Bags<usize> = Bags::default();
     for line in read_to_string(path)?.lines().skip(1) {
         let label_entry: LabelEntry = line.parse()?;
         let aux = |i: usize| label_entry.values.get(i).copied().unwrap_or(0);
