@@ -151,6 +151,14 @@ impl MLC<'_> {
         std::mem::replace(&mut self.limits, Limits::new())
     }
 
+    /// Move the bag set out of this `MLC`. Use after `run()` instead of
+    /// `run()?.clone()` when the caller wants owned bags — saves the
+    /// HashMap+Vec<Label> clone, which is the largest per-step allocation in
+    /// the round-trip scheduler (MLC's bags == existing + propagated).
+    pub fn take_bags(&mut self) -> Bags<usize> {
+        std::mem::replace(&mut self.bags, Bags::default())
+    }
+
     /// Sets the dominance/pruning state without pushing labels to the queue.
     /// Labels added later via `set_seed_bags` are dominance-checked against
     /// this state at insertion time, avoiding propagation of dominated labels.
