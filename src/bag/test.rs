@@ -8,13 +8,13 @@ mod tests {
     fn test_label_ordering() {
         let label_small = Label {
             objective: Objective::new(1, 10),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0]),
             node_id: 0,
         };
         let label_large = Label {
             objective: Objective::new(5, 2),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0]),
             node_id: 0,
         };
@@ -38,13 +38,13 @@ mod tests {
 
         let label_a = Label {
             objective: Objective::new(5, 3),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0, 1, 2]),
             node_id: 2,
         };
         let label_b = Label {
             objective: Objective::new(5, 3),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![9, 8]),
             node_id: 99,
         };
@@ -73,12 +73,12 @@ mod tests {
 
         let start_label = Label {
             objective: Objective::new(5, 0),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0]),
             node_id: 0,
         };
 
-        let closure = |label: &Label<usize>, weight: &WeightsTuple| {
+        let closure = |label: &Label<usize, ()>, weight: &WeightsTuple| {
             (
                 Objective::new(
                     label.objective.time + weight.distance_mm / 5,
@@ -105,37 +105,37 @@ mod tests {
     fn test_weakly_dominates() {
         let label1 = Label {
             objective: Objective::new(1, 2),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0, 1, 2]),
             node_id: 2,
         };
         let label2 = Label {
             objective: Objective::new(1, 2),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0, 1, 2]),
             node_id: 2,
         };
         let label3 = Label {
             objective: Objective::new(2, 3),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0, 1, 2]),
             node_id: 2,
         };
         let label4 = Label {
             objective: Objective::new(1, 3),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0, 1, 2]),
             node_id: 2,
         };
         let label_bug_1 = Label {
             objective: Objective::new(350274, 0),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0]),
             node_id: 1,
         };
         let label_bug_2 = Label {
             objective: Objective::new(357024742, 0),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0]),
             node_id: 1,
         };
@@ -154,13 +154,13 @@ mod tests {
         let mut bag = Bag::new_empty();
         let label1 = Label {
             objective: Objective::new(1, 2),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0, 1, 2]),
             node_id: 2,
         };
         let label2 = Label {
             objective: Objective::new(2, 3),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0, 1, 2]),
             node_id: 2,
         };
@@ -173,7 +173,7 @@ mod tests {
 
         let label3 = Label {
             objective: Objective::new(2, 1),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0, 1, 2]),
             node_id: 2,
         };
@@ -190,19 +190,19 @@ mod tests {
         let mut bag = Bag::new_empty();
         let label1 = Label {
             objective: Objective::new(1, 5),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0, 1, 2]),
             node_id: 2,
         };
         let label2 = Label {
             objective: Objective::new(4, 2),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0, 1, 2]),
             node_id: 2,
         };
         let label3 = Label {
             objective: Objective::new(0, 0),
-            auxiliary: Auxiliary::new_empty(),
+            auxiliary: (),
             path: path_from_vec(vec![0, 1, 2]),
             node_id: 2,
         };

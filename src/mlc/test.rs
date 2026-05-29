@@ -1,6 +1,5 @@
 #[cfg(test)]
 mod tests {
-    use crate::bag::Auxiliary;
     use crate::bag::Objective;
     use crate::bag::{path_from_vec, path_to_vec, Bag, Label, WeightsTuple};
     use crate::mlc;
@@ -13,7 +12,7 @@ mod tests {
     fn test_run_mlc() {
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
 
-        let mut mlc = mlc::MLC::new(&g).unwrap();
+        let mut mlc = mlc::MLC::<()>::new(&g).unwrap();
         // Edges only carry distance_mm in the new format, but the fixture in
         // results.csv was generated when edges carried two objective values
         // (time; cost) that were summed into the label. The test graph is a
@@ -33,7 +32,7 @@ mod tests {
         });
         mlc.set_start_node(0);
         let bags = mlc.run().unwrap();
-        let expected_result = mlc::read_bags("testdata/results.csv").unwrap();
+        let expected_result = mlc::read_bags::<()>("testdata/results.csv").unwrap();
         // Bag's derived PartialEq is order-sensitive on the inner Vec<Label>,
         // but the insertion order out of the MLC main loop depends on HashMap
         // iteration order. Compare per-node label sets (keyed by objective).
@@ -85,7 +84,7 @@ mod tests {
         g
     }
 
-    fn path_is_valid(label: &Label<usize>, g: &Graph<Vec<u8>, WeightsTuple, Directed>) -> bool {
+    fn path_is_valid(label: &Label<usize, ()>, g: &Graph<Vec<u8>, WeightsTuple, Directed>) -> bool {
         // path contains the full route including the destination node,
         // so consecutive pairs are the edges that must exist in the graph.
         let v = path_to_vec(&label.path);
@@ -96,7 +95,7 @@ mod tests {
     #[test]
     fn test_set_start_node_with_time() {
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
-        let mut m = mlc::MLC::new(&g).unwrap();
+        let mut m = mlc::MLC::<()>::new(&g).unwrap();
         m.set_start_node_with_time(0, 100);
         let bags = m.run().unwrap();
 
@@ -121,7 +120,7 @@ mod tests {
     #[test]
     fn test_set_external_start_node() {
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
-        let mut m = mlc::MLC::new(&g).unwrap();
+        let mut m = mlc::MLC::<()>::new(&g).unwrap();
         let node_map = bimap::BiMap::from_iter(vec![
             ("0".to_string(), 0usize),
             ("1".to_string(), 1usize),
@@ -141,7 +140,7 @@ mod tests {
     #[test]
     fn test_set_external_start_node_error_no_map() {
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
-        let mut m = mlc::MLC::new(&g).unwrap();
+        let mut m = mlc::MLC::<()>::new(&g).unwrap();
         let result = m.set_external_start_node("0".to_string());
         assert!(
             matches!(result, Err(mlc::MLCError::NodeMapNotSet)),
@@ -152,7 +151,7 @@ mod tests {
     #[test]
     fn test_set_external_start_node_error_not_found() {
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
-        let mut m = mlc::MLC::new(&g).unwrap();
+        let mut m = mlc::MLC::<()>::new(&g).unwrap();
         let node_map = bimap::BiMap::from_iter(vec![("0".to_string(), 0usize)]);
         m.set_node_map(node_map);
         let result = m.set_external_start_node("99999".to_string());
@@ -165,7 +164,7 @@ mod tests {
     #[test]
     fn test_set_disable_paths() {
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
-        let mut m = mlc::MLC::new(&g).unwrap();
+        let mut m = mlc::MLC::<()>::new(&g).unwrap();
         m.set_disable_paths(true);
         m.set_start_node(0);
         let bags = m.run().unwrap();
@@ -183,7 +182,7 @@ mod tests {
     #[test]
     fn test_write_bags_read_bags_roundtrip() {
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
-        let mut m = mlc::MLC::new(&g).unwrap();
+        let mut m = mlc::MLC::<()>::new(&g).unwrap();
         m.set_start_node(0);
         let bags = m.run().unwrap().clone();
 
@@ -201,13 +200,13 @@ mod tests {
         g.add_node(vec![]);
         g.add_node(vec![]);
         // no edges added
-        assert!(mlc::MLC::new(&g).is_err());
+        assert!(mlc::MLC::<()>::new(&g).is_err());
     }
 
     #[test]
     fn test_set_update_label_func() {
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
-        let mut m = mlc::MLC::new(&g).unwrap();
+        let mut m = mlc::MLC::<()>::new(&g).unwrap();
         m.set_update_label_func(|old, _weight| {
             let mut updated = old.clone();
             updated.objective.time += 1000;
@@ -232,7 +231,7 @@ mod tests {
         // edges.csv nodes have no categories → limits not initialised → panic
         let result = std::panic::catch_unwind(|| {
             let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
-            let mut m = mlc::MLC::new(&g).unwrap();
+            let mut m = mlc::MLC::<()>::new(&g).unwrap();
             m.set_enable_limit(true);
             m.set_start_node(0);
             let _ = m.run();
@@ -246,7 +245,7 @@ mod tests {
     #[test]
     fn test_enable_limit_with_categorised_graph() {
         let g = build_brugge_walking_graph();
-        let mut m = mlc::MLC::new(&g).unwrap();
+        let mut m = mlc::MLC::<()>::new(&g).unwrap();
         m.set_enable_limit(true);
         m.set_start_node(0);
         let bags = m.run().unwrap();
@@ -276,11 +275,11 @@ mod tests {
 
         // ── 1. Pre-initialised bags (set_bags) ────────────────────────────────
         // Simulate two origins that were already reached (e.g. from a prior pass)
-        let mut start_bags: mlc::Bags<usize> = mlc::Bags::default();
+        let mut start_bags: mlc::Bags<usize, ()> = mlc::Bags::default();
         for &start_node in &[0_usize, 100_usize] {
             let label = Label {
                 objective: Objective::new(0, 0),
-                auxiliary: Auxiliary::new(0, 0, 0, None),
+                auxiliary: (),
                 path: path_from_vec(vec![start_node]),
                 node_id: start_node,
             };
@@ -289,7 +288,7 @@ mod tests {
 
         // ── 2. Run WITH limits ────────────────────────────────────────────────
         let bags_limited = {
-            let mut m = mlc::MLC::new(&g).unwrap();
+            let mut m = mlc::MLC::<()>::new(&g).unwrap();
             m.set_enable_limit(true);
             m.set_bags(start_bags.clone());
             m.run().unwrap().clone()
@@ -297,7 +296,7 @@ mod tests {
 
         // ── 3. Run WITHOUT limits (baseline) ─────────────────────────────────
         let bags_unlimited = {
-            let mut m = mlc::MLC::new(&g).unwrap();
+            let mut m = mlc::MLC::<()>::new(&g).unwrap();
             m.set_bags(start_bags);
             m.run().unwrap().clone()
         };
@@ -375,29 +374,29 @@ mod tests {
         let n1 = g.add_node(vec![]);
         g.add_edge(n0, n1, WeightsTuple { distance_mm: 10 });
 
-        let mut existing: mlc::Bags<usize> = mlc::Bags::default();
+        let mut existing: mlc::Bags<usize, ()> = mlc::Bags::default();
         existing.insert(
             1,
             Bag::new_start_bag(Label {
                 objective: Objective::new(0, 0),
-                auxiliary: Auxiliary::new(0, 0, 0, None),
+                auxiliary: (),
                 path: path_from_vec(vec![1]),
                 node_id: 1,
             }),
         );
 
-        let mut seed: mlc::Bags<usize> = mlc::Bags::default();
+        let mut seed: mlc::Bags<usize, ()> = mlc::Bags::default();
         seed.insert(
             0,
             Bag::new_start_bag(Label {
                 objective: Objective::new(100, 0),
-                auxiliary: Auxiliary::new(0, 0, 0, None),
+                auxiliary: (),
                 path: path_from_vec(vec![0]),
                 node_id: 0,
             }),
         );
 
-        let mut m = mlc::MLC::new(&g).unwrap();
+        let mut m = mlc::MLC::<()>::new(&g).unwrap();
         m.set_existing_bags(existing);
         m.set_seed_bags(seed);
         let bags = m.run().unwrap();
@@ -415,25 +414,25 @@ mod tests {
         // set_existing_bags(b.clone()) + set_seed_bags(b).
         let g = read::read_graph_with_int_ids("testdata/edges.csv").unwrap();
 
-        let mut start: mlc::Bags<usize> = mlc::Bags::default();
+        let mut start: mlc::Bags<usize, ()> = mlc::Bags::default();
         start.insert(
             0,
             Bag::new_start_bag(Label {
                 objective: Objective::new(0, 0),
-                auxiliary: Auxiliary::new(0, 0, 0, None),
+                auxiliary: (),
                 path: path_from_vec(vec![0]),
                 node_id: 0,
             }),
         );
 
         let bags_combined = {
-            let mut m = mlc::MLC::new(&g).unwrap();
+            let mut m = mlc::MLC::<()>::new(&g).unwrap();
             m.set_bags(start.clone());
             m.run().unwrap().clone()
         };
 
         let bags_split = {
-            let mut m = mlc::MLC::new(&g).unwrap();
+            let mut m = mlc::MLC::<()>::new(&g).unwrap();
             m.set_existing_bags(start.clone());
             m.set_seed_bags(start);
             m.run().unwrap().clone()

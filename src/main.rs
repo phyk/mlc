@@ -36,7 +36,7 @@ fn run_mlc() {
 
     info!("Creating MLC runner");
     #[allow(unused_mut)]
-    let mut mlc = mlc::MLC::new(&g).unwrap();
+    let mut mlc = mlc::MLC::<()>::new(&g).unwrap();
     // mlc.set_update_label_func(update_label_func);
     // mlc.set_debug(true);
     info!("Running MLC");

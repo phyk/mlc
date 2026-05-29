@@ -89,13 +89,14 @@ pub fn path_extend<T>(parent: &Path<T>, node_id: T) -> Path<T> {
 
 /// A Pareto label representing a route from the origin to `node_id`.
 ///
-/// `objectives` and `auxiliary` are accumulated sums of edge weights along the path.
-/// Only `objectives` are used for dominance comparisons; `auxiliary` values are tracked
-/// but ignored when determining whether one label dominates another.
+/// `objective` is summed along the path and used for dominance comparisons.
+/// `auxiliary` is an opaque value of type `A` — the MLC algorithm only stores
+/// and forwards it (via the `update_label_func` closure); callers attach
+/// whatever per-label metadata their domain requires.
 #[derive(Debug, Clone)]
-pub struct Label<T> {
+pub struct Label<T, A> {
     pub objective: Objective,
-    pub auxiliary: Auxiliary,
+    pub auxiliary: A,
     pub path: Path<T>,
     pub node_id: T,
 }
@@ -104,63 +105,6 @@ pub struct Label<T> {
 pub struct Objective {
     pub time: u64,
     pub cost: u64,
-}
-
-/// The transport mode used on the most recent edge of a label's path.
-/// Tracked in `Auxiliary` so mode-transition costs (e.g., car switch_time)
-/// can fire only on actual transitions.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum LastRoutedMode {
-    Walking,
-    Cycling,
-    Car,
-    SharedBike,
-    SharedScooter,
-}
-
-#[derive(Debug, Clone)]
-pub struct Auxiliary {
-    pub dist_walk: u64,
-    pub dist_bike: u64,
-    pub dist_car: u64,
-    pub last_routed_mode: Option<LastRoutedMode>,
-}
-
-impl Add for Auxiliary {
-    type Output = Self;
-    fn add(self, rhs: Self) -> Self::Output {
-        Auxiliary {
-            dist_bike: self.dist_bike + rhs.dist_bike,
-            dist_car: self.dist_car + rhs.dist_car,
-            dist_walk: self.dist_walk + rhs.dist_walk,
-            last_routed_mode: rhs.last_routed_mode.or(self.last_routed_mode),
-        }
-    }
-}
-
-impl Auxiliary {
-    pub fn new(
-        dist_walk: u64,
-        dist_bike: u64,
-        dist_car: u64,
-        last_routed_mode: Option<LastRoutedMode>,
-    ) -> Auxiliary {
-        Auxiliary {
-            dist_walk,
-            dist_bike,
-            dist_car,
-            last_routed_mode,
-        }
-    }
-
-    pub fn new_empty() -> Auxiliary {
-        Auxiliary {
-            dist_walk: 0,
-            dist_bike: 0,
-            dist_car: 0,
-            last_routed_mode: None,
-        }
-    }
 }
 
 impl Add for Objective {
@@ -207,13 +151,13 @@ impl Objective {
     }
 }
 
-impl Label<NodeId> {
+impl<A> Label<NodeId, A> {
     pub fn new_along(
         &self,
         edge: &EdgeReference<WeightsTuple>,
         disable_path: bool,
-        update_label_func: impl Fn(&Label<usize>, &WeightsTuple) -> (Objective, Auxiliary),
-    ) -> Label<NodeId> {
+        update_label_func: impl Fn(&Label<usize, A>, &WeightsTuple) -> (Objective, A),
+    ) -> Label<NodeId, A> {
         let weight = edge.weight();
         let (objective, auxiliary) = update_label_func(self, weight);
 
@@ -234,33 +178,33 @@ impl Label<NodeId> {
     // returns true if the label weakly dominates the other label
     // this is the case if it either strictly dominates the other label
     // or if it is equal to the other label
-    fn weakly_dominates(&self, other: &Label<NodeId>) -> bool {
+    fn weakly_dominates(&self, other: &Label<NodeId, A>) -> bool {
         self.objective.time <= other.objective.time
             && self.objective.cost <= other.objective.cost
     }
 }
 
-impl<T> Ord for Label<T> {
+impl<T, A> Ord for Label<T, A> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-       self.objective.cmp(&other.objective)
+        self.objective.cmp(&other.objective)
     }
 }
 
-impl<T> PartialOrd for Label<T> {
+impl<T, A> PartialOrd for Label<T, A> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<T> PartialEq for Label<T> {
+impl<T, A> PartialEq for Label<T, A> {
     fn eq(&self, other: &Self) -> bool {
         self.objective == other.objective
     }
 }
 
-impl<T> Eq for Label<T> {}
+impl<T, A> Eq for Label<T, A> {}
 
-impl<T> Hash for Label<T> {
+impl<T, A> Hash for Label<T, A> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.objective.hash(state);
     }
@@ -272,23 +216,31 @@ impl<T> Hash for Label<T> {
 /// usually a handful of labels — so contiguous-memory linear scans beat
 /// SipHash + bucket chasing. `add_if_necessary` guarantees no two labels in
 /// the Vec are weakly comparable, so duplicates by objective never appear.
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Bag<T> {
-    pub labels: Vec<Label<T>>,
+#[derive(Debug, Clone)]
+pub struct Bag<T, A> {
+    pub labels: Vec<Label<T, A>>,
 }
 
-impl Bag<NodeId> {
-    pub fn new_start_bag(start_label: Label<NodeId>) -> Bag<NodeId> {
+impl<T, A> PartialEq for Bag<T, A> {
+    fn eq(&self, other: &Self) -> bool {
+        self.labels == other.labels
+    }
+}
+
+impl<T, A> Eq for Bag<T, A> {}
+
+impl<A> Bag<NodeId, A> {
+    pub fn new_start_bag(start_label: Label<NodeId, A>) -> Bag<NodeId, A> {
         Bag {
             labels: vec![start_label],
         }
     }
 
-    pub fn new_empty() -> Bag<NodeId> {
+    pub fn new_empty() -> Bag<NodeId, A> {
         Bag { labels: Vec::new() }
     }
 
-    pub fn add_if_necessary(&mut self, label: Label<NodeId>) -> bool {
+    pub fn add_if_necessary(&mut self, label: Label<NodeId, A>) -> bool {
         if self.content_dominates(&label) {
             return false;
         }
@@ -297,11 +249,11 @@ impl Bag<NodeId> {
         true
     }
 
-    pub fn content_dominates(&self, label: &Label<NodeId>) -> bool {
+    pub fn content_dominates(&self, label: &Label<NodeId, A>) -> bool {
         self.labels.iter().any(|l| l.weakly_dominates(label))
     }
 
-    fn remove_dominated_by(&mut self, label: &Label<NodeId>) {
+    fn remove_dominated_by(&mut self, label: &Label<NodeId, A>) {
         self.labels.retain(|l| !label.weakly_dominates(l));
     }
 }
