@@ -85,7 +85,7 @@ fn default_update_label_func<A: Clone>(
     )
 }
 
-impl<'a, A: Default + Clone + 'static> MLC<'a, A> {
+impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
     pub fn new(
         g: &'a Graph<Vec<u8>, WeightsTuple, Directed>,
     ) -> Result<MLC<'a, A>, Box<dyn Error>> {
@@ -481,7 +481,7 @@ impl FromStr for LabelEntry {
 /// Read bags from the CSV debug format. Auxiliary is reconstructed via
 /// `A::default()` since the format only carries node_id, path, and objectives
 /// (the MLC algorithm treats aux opaquely and cannot generically serialize it).
-pub fn read_bags<A: Default>(path: &str) -> Result<Bags<usize, A>, Box<dyn Error>> {
+pub fn read_bags<A: Default + AuxFlex>(path: &str) -> Result<Bags<usize, A>, Box<dyn Error>> {
     let mut bags: Bags<usize, A> = Bags::default();
     for line in read_to_string(path)?.lines().skip(1) {
         let label_entry: LabelEntry = line.parse()?;

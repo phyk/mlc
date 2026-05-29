@@ -87,6 +87,31 @@ pub fn path_extend<T>(parent: &Path<T>, node_id: T) -> Path<T> {
     }))
 }
 
+/// Tie-break ordering on the auxiliary field, used by `Bag` to suppress
+/// dominance between equal-objective labels that differ on a non-objective
+/// dimension the domain treats as load-bearing.
+///
+/// The default implementation returns `true` for every pair, meaning the
+/// auxiliary is *not* tie-broken — equal-objective labels dominate each
+/// other as they do under standard 2-D Pareto. Callers with a richer aux
+/// (e.g. MCR's `Auxiliary::pt_shift_secs`) override this method to encode
+/// the rule "an aux state strictly less flexible than another's must not
+/// dominate it at equal time and cost." Concretely a label `L1` weakly
+/// dominates `L2` iff
+///     `L1.time ≤ L2.time ∧ L1.cost ≤ L2.cost ∧ L1.aux.at_least_as_flexible(&L2.aux)`.
+///
+/// Implementations must be reflexive (`a.at_least_as_flexible(&a) == true`).
+/// They need not be antisymmetric — two aux values can each be at-least-as-
+/// flexible-as the other, in which case the bag keeps both at equal
+/// objectives (the standard Pareto-equivalent case).
+pub trait AuxFlex {
+    fn at_least_as_flexible(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
+impl AuxFlex for () {}
+
 /// A Pareto label representing a route from the origin to `node_id`.
 ///
 /// `objective` is summed along the path and used for dominance comparisons.
@@ -175,12 +200,18 @@ impl<A> Label<NodeId, A> {
         }
     }
 
-    // returns true if the label weakly dominates the other label
-    // this is the case if it either strictly dominates the other label
-    // or if it is equal to the other label
+}
+
+impl<A: AuxFlex> Label<NodeId, A> {
+    /// Standard weak 2-D Pareto dominance on `(time, cost)`, augmented with
+    /// the `AuxFlex` tie-break: `self` does *not* dominate `other` if its
+    /// aux is strictly less flexible than `other`'s. With the default
+    /// `AuxFlex` impl (always returns `true`) this reduces to the plain
+    /// 2-D rule.
     fn weakly_dominates(&self, other: &Label<NodeId, A>) -> bool {
         self.objective.time <= other.objective.time
             && self.objective.cost <= other.objective.cost
+            && self.auxiliary.at_least_as_flexible(&other.auxiliary)
     }
 }
 
@@ -239,7 +270,9 @@ impl<A> Bag<NodeId, A> {
     pub fn new_empty() -> Bag<NodeId, A> {
         Bag { labels: Vec::new() }
     }
+}
 
+impl<A: AuxFlex> Bag<NodeId, A> {
     pub fn add_if_necessary(&mut self, label: Label<NodeId, A>) -> bool {
         if self.content_dominates(&label) {
             return false;
