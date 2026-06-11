@@ -1,0 +1,2412 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "mlc",
+    "is_monorepo": false,
+    "total_files": 14,
+    "entry_points": [
+      "src/lib.rs",
+      "src/main.rs"
+    ],
+    "tech_stack": [
+      {
+        "name": "Rust",
+        "version": null,
+        "category": "language"
+      }
+    ]
+  },
+  "nodes": [
+    {
+      "id": "file:.claude/settings.local.json",
+      "type": "config",
+      "filePath": ".claude/settings.local.json",
+      "language": "json",
+      "symbolCount": 0,
+      "lineCount": 2,
+      "complexity": "simple",
+      "pagerank": 0.015298,
+      "communityId": 6,
+      "tags": [
+        "config"
+      ],
+      "summary": ""
+    },
+    {
+      "id": "file:Cargo.toml",
+      "type": "config",
+      "filePath": "Cargo.toml",
+      "language": "toml",
+      "symbolCount": 0,
+      "lineCount": 8,
+      "complexity": "simple",
+      "pagerank": 0.015298,
+      "communityId": 7,
+      "tags": [
+        "config"
+      ],
+      "summary": ""
+    },
+    {
+      "id": "file:preview_graph.sh",
+      "type": "file",
+      "filePath": "preview_graph.sh",
+      "language": "shell",
+      "symbolCount": 0,
+      "lineCount": 7,
+      "complexity": "simple",
+      "pagerank": 0.015298,
+      "communityId": 8,
+      "tags": [],
+      "summary": "",
+      "primaryOwner": "Moritz Gottschling"
+    },
+    {
+      "id": "file:.github/workflows/rust.yml",
+      "type": "config",
+      "filePath": ".github/workflows/rust.yml",
+      "language": "yaml",
+      "symbolCount": 0,
+      "lineCount": 7,
+      "complexity": "simple",
+      "pagerank": 0.015298,
+      "communityId": 9,
+      "tags": [
+        "config"
+      ],
+      "summary": ""
+    },
+    {
+      "id": "file:src/read.rs",
+      "type": "file",
+      "filePath": "src/read.rs",
+      "language": "rust",
+      "symbolCount": 19,
+      "lineCount": 97,
+      "complexity": "complex",
+      "pagerank": 0.029877,
+      "communityId": 2,
+      "tags": [],
+      "summary": "",
+      "primaryOwner": "Moritz Gottschling"
+    },
+    {
+      "id": "function:src/read.rs:read_graph_and_reset_ids",
+      "type": "function",
+      "filePath": "src/read.rs",
+      "name": "read_graph_and_reset_ids",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/read.rs:read_graph_with_int_ids",
+      "type": "function",
+      "filePath": "src/read.rs",
+      "name": "read_graph_with_int_ids",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/read.rs:from_str",
+      "type": "function",
+      "filePath": "src/read.rs",
+      "name": "from_str",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/read.rs:deserialize",
+      "type": "function",
+      "filePath": "src/read.rs",
+      "name": "deserialize",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "file:src/mlc.rs",
+      "type": "file",
+      "filePath": "src/mlc.rs",
+      "language": "rust",
+      "symbolCount": 56,
+      "lineCount": 477,
+      "complexity": "complex",
+      "pagerank": 0.023828,
+      "communityId": 0,
+      "tags": [],
+      "summary": "",
+      "primaryOwner": "Moritz Gottschling"
+    },
+    {
+      "id": "function:src/mlc.rs:fmt",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "fmt",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:default_update_label_func",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "default_update_label_func",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:new",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "new",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:set_update_label_func",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "set_update_label_func",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:set_debug",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "set_debug",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:set_node_map",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "set_node_map",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:set_disable_paths",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "set_disable_paths",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:set_enable_limit",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "set_enable_limit",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:set_limits",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "set_limits",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:take_limits",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "take_limits",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:take_bags",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "take_bags",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:set_existing_bags",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "set_existing_bags",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:set_seed_bags",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "set_seed_bags",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:set_bags",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "set_bags",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:make_start_label",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "make_start_label",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:set_start_node",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "set_start_node",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:set_start_node_with_time",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "set_start_node_with_time",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:set_external_start_node",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "set_external_start_node",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:run",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "run",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:translate_bags",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "translate_bags",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:write_node_map_as_csv",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "write_node_map_as_csv",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:exceeds_limit",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "exceeds_limit",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:update_limits",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "update_limits",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:from_str",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "from_str",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:read_bags",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "read_bags",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc.rs:write_bags",
+      "type": "function",
+      "filePath": "src/mlc.rs",
+      "name": "write_bags",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "file:src/bag.rs",
+      "type": "file",
+      "filePath": "src/bag.rs",
+      "language": "rust",
+      "symbolCount": 67,
+      "lineCount": 216,
+      "complexity": "complex",
+      "pagerank": 0.028522,
+      "communityId": 3,
+      "tags": [],
+      "summary": "",
+      "primaryOwner": "Philipp Peter"
+    },
+    {
+      "id": "function:src/bag.rs:from",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "from",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:new",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "new",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:path_from_vec",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "path_from_vec",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:path_to_vec",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "path_to_vec",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:path_extend",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "path_extend",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:at_least_as_flexible",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "at_least_as_flexible",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:add",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "add",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:eq",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "eq",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:partial_cmp",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "partial_cmp",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:cmp",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "cmp",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:hash",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "hash",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:new_along",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "new_along",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:weakly_dominates",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "weakly_dominates",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:new_start_bag",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "new_start_bag",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:new_empty",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "new_empty",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:add_if_necessary",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "add_if_necessary",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:content_dominates",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "content_dominates",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/bag.rs:remove_dominated_by",
+      "type": "function",
+      "filePath": "src/bag.rs",
+      "name": "remove_dominated_by",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "file:src/mlc/test.rs",
+      "type": "file",
+      "filePath": "src/mlc/test.rs",
+      "language": "rust",
+      "symbolCount": 18,
+      "lineCount": 427,
+      "complexity": "complex",
+      "pagerank": 0.024813,
+      "communityId": 5,
+      "tags": [],
+      "summary": "",
+      "primaryOwner": "Philipp Peter"
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_run_mlc",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_run_mlc",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:read_node_categories",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "read_node_categories",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:build_brugge_walking_graph",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "build_brugge_walking_graph",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:path_is_valid",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "path_is_valid",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_set_start_node_with_time",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_set_start_node_with_time",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_set_external_start_node",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_set_external_start_node",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_set_external_start_node_error_no_map",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_set_external_start_node_error_no_map",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_set_external_start_node_error_not_found",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_set_external_start_node_error_not_found",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_set_disable_paths",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_set_disable_paths",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_write_bags_read_bags_roundtrip",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_write_bags_read_bags_roundtrip",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_mlc_new_empty_graph_error",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_mlc_new_empty_graph_error",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_set_update_label_func",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_set_update_label_func",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_enable_limit_requires_categories",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_enable_limit_requires_categories",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_enable_limit_with_categorised_graph",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_enable_limit_with_categorised_graph",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_brugge_walking_with_limits",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_brugge_walking_with_limits",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_set_existing_bags_prunes_propagated_labels",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_set_existing_bags_prunes_propagated_labels",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/test.rs:test_set_bags_back_compat",
+      "type": "function",
+      "filePath": "src/mlc/test.rs",
+      "name": "test_set_bags_back_compat",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "file:src/lib.rs",
+      "type": "file",
+      "filePath": "src/lib.rs",
+      "language": "rust",
+      "symbolCount": 3,
+      "lineCount": 1,
+      "complexity": "simple",
+      "pagerank": 0.015298,
+      "communityId": 2,
+      "tags": [
+        "entry_point"
+      ],
+      "summary": "",
+      "primaryOwner": "Moritz Gottschling"
+    },
+    {
+      "id": "file:src/main.rs",
+      "type": "file",
+      "filePath": "src/main.rs",
+      "language": "rust",
+      "symbolCount": 6,
+      "lineCount": 34,
+      "complexity": "moderate",
+      "pagerank": 0.015298,
+      "communityId": 1,
+      "tags": [
+        "entry_point"
+      ],
+      "summary": "",
+      "primaryOwner": "Moritz Gottschling"
+    },
+    {
+      "id": "file:src/bag/test.rs",
+      "type": "file",
+      "filePath": "src/bag/test.rs",
+      "language": "rust",
+      "symbolCount": 7,
+      "lineCount": 167,
+      "complexity": "moderate",
+      "pagerank": 0.018432,
+      "communityId": 4,
+      "tags": [],
+      "summary": "",
+      "primaryOwner": "Philipp Peter"
+    },
+    {
+      "id": "file:src/mlc/limit.rs",
+      "type": "file",
+      "filePath": "src/mlc/limit.rs",
+      "language": "rust",
+      "symbolCount": 15,
+      "lineCount": 110,
+      "complexity": "moderate",
+      "pagerank": 0.015298,
+      "communityId": 5,
+      "tags": [],
+      "summary": "",
+      "primaryOwner": "Moritz Gottschling"
+    },
+    {
+      "id": "file:src/mlc/limit/test.rs",
+      "type": "file",
+      "filePath": "src/mlc/limit/test.rs",
+      "language": "rust",
+      "symbolCount": 7,
+      "lineCount": 120,
+      "complexity": "moderate",
+      "pagerank": 0.101868,
+      "communityId": 10,
+      "tags": [],
+      "summary": "",
+      "primaryOwner": "Moritz Gottschling"
+    },
+    {
+      "id": "function:src/mlc/limit/test.rs:test_update_limits",
+      "type": "function",
+      "filePath": "src/mlc/limit/test.rs",
+      "name": "test_update_limits",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/limit/test.rs:test_update_limits_single_category",
+      "type": "function",
+      "filePath": "src/mlc/limit/test.rs",
+      "name": "test_update_limits_single_category",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/limit/test.rs:test_update_limits_multi_category",
+      "type": "function",
+      "filePath": "src/mlc/limit/test.rs",
+      "name": "test_update_limits_multi_category",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/limit/test.rs:test_init_limits_with_bags",
+      "type": "function",
+      "filePath": "src/mlc/limit/test.rs",
+      "name": "test_init_limits_with_bags",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/limit/test.rs:test_get_max_time_for_cost",
+      "type": "function",
+      "filePath": "src/mlc/limit/test.rs",
+      "name": "test_get_max_time_for_cost",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "function:src/mlc/limit/test.rs:test_determine_limit",
+      "type": "function",
+      "filePath": "src/mlc/limit/test.rs",
+      "name": "test_determine_limit",
+      "language": "rust",
+      "tags": [],
+      "summary": ""
+    },
+    {
+      "id": "file:src/read/test.rs",
+      "type": "file",
+      "filePath": "src/read/test.rs",
+      "language": "rust",
+      "symbolCount": 5,
+      "lineCount": 43,
+      "complexity": "moderate",
+      "pagerank": 0.021347,
+      "communityId": 2,
+      "tags": [],
+      "summary": "",
+      "primaryOwner": "Philipp Peter"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:src/read.rs",
+      "target": "function:src/read.rs:read_graph_and_reset_ids",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read.rs",
+      "target": "function:src/read.rs:read_graph_with_int_ids",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read.rs",
+      "target": "function:src/read.rs:from_str",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read.rs",
+      "target": "function:src/read.rs:deserialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read.rs",
+      "target": "file:external:test",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read.rs",
+      "target": "file:external:bimap::BiMap",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read.rs",
+      "target": "file:external:petgraph::Graph",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read.rs",
+      "target": "file:external:petgraph::{graph::NodeIndex, Directed}",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read.rs",
+      "target": "file:external:serde::{de, Deserialize, Deserializer}",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read.rs",
+      "target": "file:external:std::{error::Error, str::FromStr}",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read.rs",
+      "target": "file:src/bag.rs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read.rs::Weights",
+      "target": "function:src/read.rs:from_str",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read.rs::Weights",
+      "target": "function:src/read.rs:deserialize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:fmt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:default_update_label_func",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:new",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:set_update_label_func",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:set_debug",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:set_node_map",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:set_disable_paths",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:set_enable_limit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:set_limits",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:take_limits",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:take_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:set_existing_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:set_seed_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:set_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:make_start_label",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:set_start_node",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:set_start_node_with_time",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:set_external_start_node",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:run",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:translate_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:write_node_map_as_csv",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:exceeds_limit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:update_limits",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:from_str",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:read_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "function:src/mlc.rs:write_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:src/bag.rs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:bimap::BiMap",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:log::{debug, info}",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:petgraph::graph::NodeIndex",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:petgraph::visit::EdgeRef",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:petgraph::{Directed, Graph}",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:rustc_hash::FxHashMap",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:std::collections::{BinaryHeap, HashSet}",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:std::error::Error",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:std::fmt",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:std::fmt::Display",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:std::fs::{read_to_string, File}",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:std::hash::Hash",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:std::io::Write",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:std::num::ParseIntError",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:std::str::FromStr",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:std::time::Instant",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:limit",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs",
+      "target": "file:external:test",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:new",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:set_update_label_func",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:set_debug",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:set_node_map",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:set_disable_paths",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:set_enable_limit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:set_limits",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:take_limits",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:take_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:set_existing_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:set_seed_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:set_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:make_start_label",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:set_start_node",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:set_start_node_with_time",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:set_external_start_node",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:run",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:translate_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:write_node_map_as_csv",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:exceeds_limit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:update_limits",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLC",
+      "target": "function:src/mlc.rs:fmt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::MLCError",
+      "target": "function:src/mlc.rs:fmt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc.rs::LabelEntry",
+      "target": "function:src/mlc.rs:from_str",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:from",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:new",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:path_from_vec",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:path_to_vec",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:path_extend",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:at_least_as_flexible",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:add",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:eq",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:partial_cmp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:cmp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:hash",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:new_along",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:weakly_dominates",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:new_start_bag",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:new_empty",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:add_if_necessary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:content_dominates",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "function:src/bag.rs:remove_dominated_by",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "file:external:test",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "file:external:petgraph::graph::EdgeReference",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "file:external:petgraph::visit::EdgeRef",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "file:external:std::cmp::Ordering",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "file:external:std::hash::Hash",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "file:external:std::ops::Add",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs",
+      "target": "file:external:std::rc::Rc",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Weights",
+      "target": "function:src/bag.rs:from",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::WeightsTuple",
+      "target": "function:src/bag.rs:new",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Label",
+      "target": "function:src/bag.rs:new_along",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Label",
+      "target": "function:src/bag.rs:weakly_dominates",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Label",
+      "target": "function:src/bag.rs:cmp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Label",
+      "target": "function:src/bag.rs:partial_cmp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Label",
+      "target": "function:src/bag.rs:eq",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Label",
+      "target": "function:src/bag.rs:hash",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Objective",
+      "target": "function:src/bag.rs:add",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Objective",
+      "target": "function:src/bag.rs:eq",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Objective",
+      "target": "function:src/bag.rs:partial_cmp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Objective",
+      "target": "function:src/bag.rs:cmp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Objective",
+      "target": "function:src/bag.rs:hash",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Objective",
+      "target": "function:src/bag.rs:new",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Bag",
+      "target": "function:src/bag.rs:eq",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Bag",
+      "target": "function:src/bag.rs:new_start_bag",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Bag",
+      "target": "function:src/bag.rs:new_empty",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Bag",
+      "target": "function:src/bag.rs:add_if_necessary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Bag",
+      "target": "function:src/bag.rs:content_dominates",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag.rs::Bag",
+      "target": "function:src/bag.rs:remove_dominated_by",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_run_mlc",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:read_node_categories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:build_brugge_walking_graph",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:path_is_valid",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_set_start_node_with_time",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_set_external_start_node",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_set_external_start_node_error_no_map",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_set_external_start_node_error_not_found",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_set_disable_paths",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_write_bags_read_bags_roundtrip",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_mlc_new_empty_graph_error",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_set_update_label_func",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_enable_limit_requires_categories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_enable_limit_with_categorised_graph",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_brugge_walking_with_limits",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_set_existing_bags_prunes_propagated_labels",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "function:src/mlc/test.rs:test_set_bags_back_compat",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "file:src/bag.rs",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "file:src/mlc.rs",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "file:src/read.rs",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "file:external:petgraph::graph::NodeIndex",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "file:external:petgraph::{Directed, Graph}",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs",
+      "target": "file:external:std::collections::HashMap",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_run_mlc",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:read_node_categories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:build_brugge_walking_graph",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:path_is_valid",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_set_start_node_with_time",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_set_external_start_node",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_set_external_start_node_error_no_map",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_set_external_start_node_error_not_found",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_set_disable_paths",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_write_bags_read_bags_roundtrip",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_mlc_new_empty_graph_error",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_set_update_label_func",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_enable_limit_requires_categories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_enable_limit_with_categorised_graph",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_brugge_walking_with_limits",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_set_existing_bags_prunes_propagated_labels",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/test.rs::tests",
+      "target": "function:src/mlc/test.rs:test_set_bags_back_compat",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/lib.rs",
+      "target": "file:src/bag.rs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/lib.rs",
+      "target": "file:src/mlc.rs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/lib.rs",
+      "target": "file:src/read.rs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:src/bag.rs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:external:color_eyre::eyre::Result",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:external:log::info",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:external:petgraph::dot::{Config, Dot}",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:external:petgraph::Graph",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:external:std::error::Error",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:external:std::fs::File",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:external:std::io::prelude::*",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:external:std::time::Instant",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:src/mlc.rs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/main.rs",
+      "target": "file:src/read.rs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag/test.rs",
+      "target": "file:external:petgraph::{Directed, Graph}",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag/test.rs",
+      "target": "file:external:std::collections::BinaryHeap",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag/test.rs",
+      "target": "file:external:std::collections::hash_map::DefaultHasher",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/bag/test.rs",
+      "target": "file:external:std::hash::{Hash, Hasher}",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit.rs",
+      "target": "file:src/mlc/test.rs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit.rs",
+      "target": "file:external:std::collections::HashMap",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit/test.rs",
+      "target": "function:src/mlc/limit/test.rs:test_update_limits",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit/test.rs",
+      "target": "function:src/mlc/limit/test.rs:test_update_limits_single_category",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit/test.rs",
+      "target": "function:src/mlc/limit/test.rs:test_update_limits_multi_category",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit/test.rs",
+      "target": "function:src/mlc/limit/test.rs:test_init_limits_with_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit/test.rs",
+      "target": "function:src/mlc/limit/test.rs:test_get_max_time_for_cost",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit/test.rs",
+      "target": "function:src/mlc/limit/test.rs:test_determine_limit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit/test.rs::tests",
+      "target": "function:src/mlc/limit/test.rs:test_update_limits",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit/test.rs::tests",
+      "target": "function:src/mlc/limit/test.rs:test_update_limits_single_category",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit/test.rs::tests",
+      "target": "function:src/mlc/limit/test.rs:test_update_limits_multi_category",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit/test.rs::tests",
+      "target": "function:src/mlc/limit/test.rs:test_init_limits_with_bags",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit/test.rs::tests",
+      "target": "function:src/mlc/limit/test.rs:test_get_max_time_for_cost",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/mlc/limit/test.rs::tests",
+      "target": "function:src/mlc/limit/test.rs:test_determine_limit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read/test.rs",
+      "target": "file:external:bimap::BiMap",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:src/read/test.rs",
+      "target": "file:src/read.rs",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 1.0
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:external-limit",
+      "name": "external:limit",
+      "description": "",
+      "nodeIds": [
+        "file:external:limit",
+        "file:external:log::{debug, info}",
+        "file:external:rustc_hash::FxHashMap",
+        "file:external:std::collections::{BinaryHeap, HashSet}",
+        "file:external:std::fmt",
+        "file:external:std::fmt::Display",
+        "file:external:std::fs::{read_to_string, File}",
+        "file:external:std::io::Write",
+        "file:external:std::num::ParseIntError",
+        "file:external:std::str::FromStr",
+        "file:src/mlc.rs"
+      ],
+      "display_order": 0
+    },
+    {
+      "id": "layer:external-color-eyre-eyre-result",
+      "name": "external:color_eyre::eyre::result",
+      "description": "",
+      "nodeIds": [
+        "file:external:color_eyre::eyre::Result",
+        "file:external:log::info",
+        "file:external:petgraph::Graph",
+        "file:external:petgraph::dot::{Config, Dot}",
+        "file:external:std::error::Error",
+        "file:external:std::fs::File",
+        "file:external:std::io::prelude::*",
+        "file:external:std::time::Instant",
+        "file:src/main.rs"
+      ],
+      "display_order": 1
+    },
+    {
+      "id": "layer:external-bimap-bimap",
+      "name": "external:bimap::bimap",
+      "description": "",
+      "nodeIds": [
+        "file:external:bimap::BiMap",
+        "file:external:petgraph::{graph::NodeIndex, Directed}",
+        "file:external:serde::{de, Deserialize, Deserializer}",
+        "file:external:std::{error::Error, str::FromStr}",
+        "file:external:test",
+        "file:src/lib.rs",
+        "file:src/read.rs",
+        "file:src/read/test.rs"
+      ],
+      "display_order": 2
+    },
+    {
+      "id": "layer:external-petgraph-graph-edgereference",
+      "name": "external:petgraph::graph::edgereference",
+      "description": "",
+      "nodeIds": [
+        "file:external:petgraph::graph::EdgeReference",
+        "file:external:petgraph::visit::EdgeRef",
+        "file:external:std::cmp::Ordering",
+        "file:external:std::hash::Hash",
+        "file:external:std::ops::Add",
+        "file:external:std::rc::Rc",
+        "file:src/bag.rs"
+      ],
+      "display_order": 3
+    },
+    {
+      "id": "layer:external-petgraph-directed-graph",
+      "name": "external:petgraph::{directed, graph}",
+      "description": "",
+      "nodeIds": [
+        "file:external:petgraph::{Directed, Graph}",
+        "file:external:std::collections::BinaryHeap",
+        "file:external:std::collections::hash_map::DefaultHasher",
+        "file:external:std::hash::{Hash, Hasher}",
+        "file:src/bag/test.rs"
+      ],
+      "display_order": 4
+    },
+    {
+      "id": "layer:mlc",
+      "name": "mlc",
+      "description": "",
+      "nodeIds": [
+        "file:external:petgraph::graph::NodeIndex",
+        "file:external:std::collections::HashMap",
+        "file:src/mlc/limit.rs",
+        "file:src/mlc/test.rs"
+      ],
+      "display_order": 5
+    },
+    {
+      "id": "layer:settings-local",
+      "name": "settings.local",
+      "description": "",
+      "nodeIds": [
+        "file:.claude/settings.local.json"
+      ],
+      "display_order": 6
+    },
+    {
+      "id": "layer:cargo",
+      "name": "cargo",
+      "description": "",
+      "nodeIds": [
+        "file:Cargo.toml"
+      ],
+      "display_order": 7
+    },
+    {
+      "id": "layer:view",
+      "name": "view",
+      "description": "",
+      "nodeIds": [
+        "file:preview_graph.sh"
+      ],
+      "display_order": 8
+    },
+    {
+      "id": "layer:workflows",
+      "name": "workflows",
+      "description": "",
+      "nodeIds": [
+        "file:.github/workflows/rust.yml"
+      ],
+      "display_order": 9
+    },
+    {
+      "id": "layer:mlc-limit",
+      "name": "mlc/limit",
+      "description": "",
+      "nodeIds": [
+        "file:src/mlc/limit/test.rs"
+      ],
+      "display_order": 10
+    }
+  ],
+  "tour": []
+}
