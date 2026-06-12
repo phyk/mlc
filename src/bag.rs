@@ -41,25 +41,47 @@ impl WeightsTuple {
 /// previous node via `parent`, so labels sharing a path prefix share the same
 /// `PathNode` allocations — extending a path is an `Rc::clone` instead of a
 /// `Vec` copy + push.
+///
+/// `edge_tag: M` describes the edge that led *into* `node_id`. Callers with no
+/// per-edge metadata leave `M = ()`; richer callers (e.g. MCR's per-hop
+/// transport mode) supply a custom `M` type and produce values from each
+/// `update_label_func` invocation. The start node's `edge_tag` is `M::default()`
+/// (no incoming edge).
 #[derive(Debug)]
-pub struct PathNode<T> {
+pub struct PathNode<T, M = ()> {
     pub node_id: T,
-    pub parent: Option<Rc<PathNode<T>>>,
+    pub edge_tag: M,
+    pub parent: Option<Rc<PathNode<T, M>>>,
 }
 
 /// A label's traversal history. `None` ⇔ "no path recorded" (used when
 /// `disable_paths` is set). Walking `parent` links from the head yields nodes
 /// in reverse (terminal → start); `path_to_vec` materialises them start → end.
-pub type Path<T> = Option<Rc<PathNode<T>>>;
+pub type Path<T, M = ()> = Option<Rc<PathNode<T, M>>>;
 
-/// Build a Path from a Vec ordered start→end. The returned head's `node_id`
-/// corresponds to `v.last()`. Used for the few callers (debug `read_bags`,
-/// tests) that still produce paths as Vecs.
-pub fn path_from_vec<T>(v: Vec<T>) -> Path<T> {
-    let mut cur: Path<T> = None;
+/// Build a Path from a Vec ordered start→end. Each node gets `M::default()` as
+/// its edge tag — used by callers that don't track per-edge metadata (tests,
+/// CSV `read_bags`).
+pub fn path_from_vec<T, M: Default>(v: Vec<T>) -> Path<T, M> {
+    let mut cur: Path<T, M> = None;
     for node_id in v {
         cur = Some(Rc::new(PathNode {
             node_id,
+            edge_tag: M::default(),
+            parent: cur,
+        }));
+    }
+    cur
+}
+
+/// Build a Path from a Vec of `(node, edge_tag)` pairs ordered start→end. The
+/// first entry's tag should be `M::default()` (no incoming edge into the start).
+pub fn path_from_vec_tagged<T, M>(v: Vec<(T, M)>) -> Path<T, M> {
+    let mut cur: Path<T, M> = None;
+    for (node_id, edge_tag) in v {
+        cur = Some(Rc::new(PathNode {
+            node_id,
+            edge_tag,
             parent: cur,
         }));
     }
@@ -68,7 +90,7 @@ pub fn path_from_vec<T>(v: Vec<T>) -> Path<T> {
 
 /// Materialise a Path into a Vec ordered start→end. Walks the linked list and
 /// reverses. O(path_len) — used at serialisation time only.
-pub fn path_to_vec<T: Clone>(path: &Path<T>) -> Vec<T> {
+pub fn path_to_vec<T: Clone, M>(path: &Path<T, M>) -> Vec<T> {
     let mut out = Vec::new();
     let mut cur = path.as_deref();
     while let Some(p) = cur {
@@ -79,10 +101,26 @@ pub fn path_to_vec<T: Clone>(path: &Path<T>) -> Vec<T> {
     out
 }
 
-/// Extend a path by one node, sharing the prior suffix via `Rc::clone`.
-pub fn path_extend<T>(parent: &Path<T>, node_id: T) -> Path<T> {
+/// Like `path_to_vec`, but also yields each node's `edge_tag`. The first
+/// element's tag is the start node's (typically `M::default()`); subsequent
+/// elements' tags describe the edge that brought the label *into* that node.
+pub fn path_to_vec_tagged<T: Clone, M: Clone>(path: &Path<T, M>) -> Vec<(T, M)> {
+    let mut out = Vec::new();
+    let mut cur = path.as_deref();
+    while let Some(p) = cur {
+        out.push((p.node_id.clone(), p.edge_tag.clone()));
+        cur = p.parent.as_deref();
+    }
+    out.reverse();
+    out
+}
+
+/// Extend a path by one node, sharing the prior suffix via `Rc::clone`. The
+/// supplied `edge_tag` describes the edge from the parent into `node_id`.
+pub fn path_extend<T, M>(parent: &Path<T, M>, node_id: T, edge_tag: M) -> Path<T, M> {
     Some(Rc::new(PathNode {
         node_id,
+        edge_tag,
         parent: parent.clone(),
     }))
 }
@@ -118,11 +156,14 @@ impl AuxFlex for () {}
 /// `auxiliary` is an opaque value of type `A` — the MLC algorithm only stores
 /// and forwards it (via the `update_label_func` closure); callers attach
 /// whatever per-label metadata their domain requires.
+///
+/// `M` is the per-edge tag stored on each `PathNode`; defaults to `()` for
+/// callers that don't track per-hop metadata.
 #[derive(Debug, Clone)]
-pub struct Label<T, A> {
+pub struct Label<T, A, M = ()> {
     pub objective: Objective,
     pub auxiliary: A,
-    pub path: Path<T>,
+    pub path: Path<T, M>,
     pub node_id: T,
 }
 
@@ -176,21 +217,21 @@ impl Objective {
     }
 }
 
-impl<A> Label<NodeId, A> {
+impl<A, M> Label<NodeId, A, M> {
     pub fn new_along(
         &self,
         edge: &EdgeReference<WeightsTuple>,
         disable_path: bool,
-        update_label_func: impl Fn(&Label<usize, A>, &WeightsTuple) -> (Objective, A),
-    ) -> Label<NodeId, A> {
+        update_label_func: impl Fn(&Label<usize, A, M>, &WeightsTuple) -> (Objective, A, M),
+    ) -> Label<NodeId, A, M> {
         let weight = edge.weight();
-        let (objective, auxiliary) = update_label_func(self, weight);
+        let (objective, auxiliary, edge_tag) = update_label_func(self, weight);
 
         let target_node_id = edge.target().index();
         let path = if disable_path {
             None
         } else {
-            path_extend(&self.path, target_node_id)
+            path_extend(&self.path, target_node_id, edge_tag)
         };
         Label {
             objective,
@@ -202,40 +243,40 @@ impl<A> Label<NodeId, A> {
 
 }
 
-impl<A: AuxFlex> Label<NodeId, A> {
+impl<A: AuxFlex, M> Label<NodeId, A, M> {
     /// Standard weak 2-D Pareto dominance on `(time, cost)`, augmented with
     /// the `AuxFlex` tie-break: `self` does *not* dominate `other` if its
     /// aux is strictly less flexible than `other`'s. With the default
     /// `AuxFlex` impl (always returns `true`) this reduces to the plain
     /// 2-D rule.
-    fn weakly_dominates(&self, other: &Label<NodeId, A>) -> bool {
+    fn weakly_dominates(&self, other: &Label<NodeId, A, M>) -> bool {
         self.objective.time <= other.objective.time
             && self.objective.cost <= other.objective.cost
             && self.auxiliary.at_least_as_flexible(&other.auxiliary)
     }
 }
 
-impl<T, A> Ord for Label<T, A> {
+impl<T, A, M> Ord for Label<T, A, M> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.objective.cmp(&other.objective)
     }
 }
 
-impl<T, A> PartialOrd for Label<T, A> {
+impl<T, A, M> PartialOrd for Label<T, A, M> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<T, A> PartialEq for Label<T, A> {
+impl<T, A, M> PartialEq for Label<T, A, M> {
     fn eq(&self, other: &Self) -> bool {
         self.objective == other.objective
     }
 }
 
-impl<T, A> Eq for Label<T, A> {}
+impl<T, A, M> Eq for Label<T, A, M> {}
 
-impl<T, A> Hash for Label<T, A> {
+impl<T, A, M> Hash for Label<T, A, M> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.objective.hash(state);
     }
@@ -248,32 +289,32 @@ impl<T, A> Hash for Label<T, A> {
 /// SipHash + bucket chasing. `add_if_necessary` guarantees no two labels in
 /// the Vec are weakly comparable, so duplicates by objective never appear.
 #[derive(Debug, Clone)]
-pub struct Bag<T, A> {
-    pub labels: Vec<Label<T, A>>,
+pub struct Bag<T, A, M = ()> {
+    pub labels: Vec<Label<T, A, M>>,
 }
 
-impl<T, A> PartialEq for Bag<T, A> {
+impl<T, A, M> PartialEq for Bag<T, A, M> {
     fn eq(&self, other: &Self) -> bool {
         self.labels == other.labels
     }
 }
 
-impl<T, A> Eq for Bag<T, A> {}
+impl<T, A, M> Eq for Bag<T, A, M> {}
 
-impl<A> Bag<NodeId, A> {
-    pub fn new_start_bag(start_label: Label<NodeId, A>) -> Bag<NodeId, A> {
+impl<A, M> Bag<NodeId, A, M> {
+    pub fn new_start_bag(start_label: Label<NodeId, A, M>) -> Bag<NodeId, A, M> {
         Bag {
             labels: vec![start_label],
         }
     }
 
-    pub fn new_empty() -> Bag<NodeId, A> {
+    pub fn new_empty() -> Bag<NodeId, A, M> {
         Bag { labels: Vec::new() }
     }
 }
 
-impl<A: AuxFlex> Bag<NodeId, A> {
-    pub fn add_if_necessary(&mut self, label: Label<NodeId, A>) -> bool {
+impl<A: AuxFlex, M> Bag<NodeId, A, M> {
+    pub fn add_if_necessary(&mut self, label: Label<NodeId, A, M>) -> bool {
         if self.content_dominates(&label) {
             return false;
         }
@@ -282,11 +323,38 @@ impl<A: AuxFlex> Bag<NodeId, A> {
         true
     }
 
-    pub fn content_dominates(&self, label: &Label<NodeId, A>) -> bool {
+    /// Time-only variant of `add_if_necessary`. Dominance ignores `cost` and the
+    /// `AuxFlex` tie-break: `self` dominates `other` iff `self.time <= other.time`.
+    /// Reject the incoming label if any existing label has `time <= new.time`,
+    /// and evict any existing label whose `time >= new.time`. At equal times
+    /// the first arrival wins. Result: each node holds at most one
+    /// time-minimum label (multiple coexist only if they tie on time *and*
+    /// the previous occupant was kept).
+    pub fn add_if_necessary_time_only(&mut self, label: Label<NodeId, A, M>) -> bool {
+        if self.content_dominates_time_only(&label) {
+            return false;
+        }
+        self.remove_dominated_by_time_only(&label);
+        self.labels.push(label);
+        true
+    }
+
+    pub fn content_dominates(&self, label: &Label<NodeId, A, M>) -> bool {
         self.labels.iter().any(|l| l.weakly_dominates(label))
     }
 
-    fn remove_dominated_by(&mut self, label: &Label<NodeId, A>) {
+    fn content_dominates_time_only(&self, label: &Label<NodeId, A, M>) -> bool {
+        self.labels
+            .iter()
+            .any(|l| l.objective.time <= label.objective.time)
+    }
+
+    fn remove_dominated_by(&mut self, label: &Label<NodeId, A, M>) {
         self.labels.retain(|l| !label.weakly_dominates(l));
+    }
+
+    fn remove_dominated_by_time_only(&mut self, label: &Label<NodeId, A, M>) {
+        self.labels
+            .retain(|l| label.objective.time > l.objective.time);
     }
 }

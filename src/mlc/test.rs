@@ -28,11 +28,12 @@ mod tests {
                     label.objective.cost + cost_step,
                 ),
                 label.auxiliary.clone(),
+                (),
             )
         });
         mlc.set_start_node(0);
         let bags = mlc.run().unwrap();
-        let expected_result = mlc::read_bags::<()>("testdata/results.csv").unwrap();
+        let expected_result = mlc::read_bags::<(), ()>("testdata/results.csv").unwrap();
         // Bag's derived PartialEq is order-sensitive on the inner Vec<Label>,
         // but the insertion order out of the MLC main loop depends on HashMap
         // iteration order. Compare per-node label sets (keyed by objective).
@@ -210,7 +211,7 @@ mod tests {
         m.set_update_label_func(|old, _weight| {
             let mut updated = old.clone();
             updated.objective.time += 1000;
-            (updated.objective, updated.auxiliary)
+            (updated.objective, updated.auxiliary, ())
         });
         m.set_start_node(0);
         let bags = m.run().unwrap();

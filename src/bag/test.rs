@@ -85,6 +85,7 @@ mod tests {
                     label.objective.cost + 1,
                 ),
                 label.auxiliary.clone(),
+                (),
             )
         };
         // with disable_path=false

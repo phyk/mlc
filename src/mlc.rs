@@ -23,27 +23,34 @@ mod test;
 
 const QUEUE_LOG_INTERVAL: usize = 1_000;
 
-pub struct MLC<'a, A> {
+pub struct MLC<'a, A, M = ()> {
     // problem state
     graph: &'a Graph<Vec<u8>, WeightsTuple, Directed>,
-    update_label_func: Box<dyn Fn(&Label<usize, A>, &WeightsTuple) -> (Objective, A)>,
+    update_label_func: Box<dyn Fn(&Label<usize, A, M>, &WeightsTuple) -> (Objective, A, M)>,
 
     // config
     node_map: Option<BiMap<String, usize>>,
     debug: bool,
     disable_paths: bool,
     enable_limit: bool,
+    /// When true, the in-loop dominance check during `run()` ignores `cost`
+    /// and the `AuxFlex` tie-break — a propagated label is rejected if any
+    /// existing label at the target node has `time <= new.time`. Seed and
+    /// existing-bag insertion (`set_seed_bags`, `set_existing_bags`) continue
+    /// to use the standard 2-D rule so the upstream Pareto frontier handed in
+    /// by the caller survives intact.
+    time_only_dominance: bool,
 
     // internal state
-    bags: Bags<usize, A>,
-    queue: BinaryHeap<Label<usize, A>>,
+    bags: Bags<usize, A, M>,
+    queue: BinaryHeap<Label<usize, A, M>>,
     limits: Limits<u8>,
 }
 
 /// Map from node id to that node's Pareto bag. Uses `FxHashMap` (XOR/multiply
 /// hashing) instead of the default SipHash — `usize` node ids are not
 /// adversarial input, and FxHash showed up as ~3% of working CPU in profiles.
-pub type Bags<T, A> = FxHashMap<T, Bag<T, A>>;
+pub type Bags<T, A, M = ()> = FxHashMap<T, Bag<T, A, M>>;
 
 #[derive(Debug)]
 pub enum MLCError {
@@ -71,24 +78,26 @@ impl fmt::Display for MLCError {
 
 impl Error for MLCError {}
 
-/// Default propagation: adds the edge distance into `time` and forwards the
-/// existing auxiliary unchanged. Callers that need richer per-edge bookkeeping
-/// (e.g., MCR's mode-aware distance accumulation) supply their own closure via
+/// Default propagation: adds the edge distance into `time`, forwards the
+/// existing auxiliary unchanged, and emits a default-valued edge tag.
+/// Callers that need richer per-edge bookkeeping (e.g., MCR's mode-aware
+/// distance accumulation and per-hop mode tag) supply their own closure via
 /// `set_update_label_func`.
-fn default_update_label_func<A: Clone>(
-    label: &Label<usize, A>,
+fn default_update_label_func<A: Clone, M: Default>(
+    label: &Label<usize, A, M>,
     weights: &WeightsTuple,
-) -> (Objective, A) {
+) -> (Objective, A, M) {
     (
         Objective::new(weights.distance_mm, 0) + label.objective.clone(),
         label.auxiliary.clone(),
+        M::default(),
     )
 }
 
-impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
+impl<'a, A: Default + Clone + AuxFlex + 'static, M: Default + Clone + 'static> MLC<'a, A, M> {
     pub fn new(
         g: &'a Graph<Vec<u8>, WeightsTuple, Directed>,
-    ) -> Result<MLC<'a, A>, Box<dyn Error>> {
+    ) -> Result<MLC<'a, A, M>, Box<dyn Error>> {
         if g.edge_count() == 0 {
             return Err("Graph has no edges".into());
         }
@@ -109,16 +118,17 @@ impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
             queue: BinaryHeap::new(),
             node_map: None,
             disable_paths: false,
-            update_label_func: Box::new(default_update_label_func::<A>),
+            update_label_func: Box::new(default_update_label_func::<A, M>),
             debug: false,
             limits,
             enable_limit: false,
+            time_only_dominance: false,
         })
     }
 
     pub fn set_update_label_func(
         &mut self,
-        f: impl Fn(&Label<usize, A>, &WeightsTuple) -> (Objective, A) + 'static,
+        f: impl Fn(&Label<usize, A, M>, &WeightsTuple) -> (Objective, A, M) + 'static,
     ) {
         self.update_label_func = Box::new(f);
     }
@@ -137,6 +147,10 @@ impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
 
     pub fn set_enable_limit(&mut self, enable_limit: bool) {
         self.enable_limit = enable_limit;
+    }
+
+    pub fn set_time_only_dominance(&mut self, time_only_dominance: bool) {
+        self.time_only_dominance = time_only_dominance;
     }
 
     /// Replace the internal `Limits` with externally-managed state. Used to
@@ -159,17 +173,17 @@ impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
     /// `run()?.clone()` when the caller wants owned bags — saves the
     /// HashMap+Vec<Label> clone, which is the largest per-step allocation in
     /// the round-trip scheduler (MLC's bags == existing + propagated).
-    pub fn take_bags(&mut self) -> Bags<usize, A> {
+    pub fn take_bags(&mut self) -> Bags<usize, A, M> {
         std::mem::replace(&mut self.bags, Bags::default())
     }
 
     /// Sets the dominance/pruning state without pushing labels to the queue.
     /// Labels added later via `set_seed_bags` are dominance-checked against
     /// this state at insertion time, avoiding propagation of dominated labels.
-    pub fn set_existing_bags(&mut self, bags: Bags<usize, A>) {
+    pub fn set_existing_bags(&mut self, bags: Bags<usize, A, M>) {
         self.bags = bags;
         if self.enable_limit {
-            let mut updates: Vec<(Label<usize, A>, Vec<u8>)> = vec![];
+            let mut updates: Vec<(Label<usize, A, M>, Vec<u8>)> = vec![];
             for bag in self.bags.values() {
                 for label in &bag.labels {
                     let nw = self
@@ -192,8 +206,8 @@ impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
     /// label that is already dominated by the existing state is not stored in
     /// the bag, and the stale-label check in `run()` will skip it when it
     /// surfaces on the queue. Use this after `set_existing_bags`.
-    pub fn set_seed_bags(&mut self, seed: Bags<usize, A>) {
-        let mut limit_updates: Vec<(Label<usize, A>, Vec<u8>)> = vec![];
+    pub fn set_seed_bags(&mut self, seed: Bags<usize, A, M>) {
+        let mut limit_updates: Vec<(Label<usize, A, M>, Vec<u8>)> = vec![];
         for bag in seed.into_values() {
             for label in bag.labels {
                 {
@@ -223,18 +237,18 @@ impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
     /// Convenience wrapper: sets both the existing-bag state and the seed
     /// queue from the same bags. Behaviourally identical to the original
     /// `set_bags` — every label participates in dominance and propagation.
-    pub fn set_bags(&mut self, bags: Bags<usize, A>) {
+    pub fn set_bags(&mut self, bags: Bags<usize, A, M>) {
         assert!(!bags.is_empty());
         self.set_existing_bags(bags.clone());
         self.set_seed_bags(bags);
     }
 
     /// Constructs a start label for `node` with the given initial objective values.
-    fn make_start_label(&self, node: usize, time: u64, cost: u64) -> Label<usize, A> {
+    fn make_start_label(&self, node: usize, time: u64, cost: u64) -> Label<usize, A, M> {
         let path = if self.disable_paths {
             None
         } else {
-            crate::bag::path_extend(&None, node)
+            crate::bag::path_extend(&None, node, M::default())
         };
         Label {
             objective: Objective::new(time, cost),
@@ -279,7 +293,7 @@ impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
     ///
     /// # Returns
     /// * `Bags<usize, A>` - The bags of each node.
-    pub fn run(&mut self) -> Result<&Bags<usize, A>, MLCError> {
+    pub fn run(&mut self) -> Result<&Bags<usize, A, M>, MLCError> {
         debug!("mlc config: {:?}", self);
 
         let mut counter = 0;
@@ -319,7 +333,12 @@ impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
                     .bags
                     .entry(edge.target().index())
                     .or_insert_with(Bag::new_empty);
-                if target_bag.add_if_necessary(new_label.clone()) {
+                let inserted = if self.time_only_dominance {
+                    target_bag.add_if_necessary_time_only(new_label.clone())
+                } else {
+                    target_bag.add_if_necessary(new_label.clone())
+                };
+                if inserted {
                     let target_node_values = self
                         .graph
                         .node_weight(edge.target())
@@ -370,12 +389,12 @@ impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
         Ok(&self.bags)
     }
 
-    fn translate_bags(&self, bags: &Bags<usize, A>) -> Bags<String, A> {
+    fn translate_bags(&self, bags: &Bags<usize, A, M>) -> Bags<String, A, M> {
         let node_map = self
             .node_map
             .as_ref()
             .expect("node_map must be passed when calling translate_bags");
-        let mut translated_bags: Bags<String, A> = Bags::default();
+        let mut translated_bags: Bags<String, A, M> = Bags::default();
         for (node_id, bag) in bags {
             let translated_node_id = node_map.get_by_right(node_id).unwrap();
             let translated_bag = Bag {
@@ -383,13 +402,19 @@ impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
                     .labels
                     .iter()
                     .map(|label| {
-                        let translated_path: Vec<String> = crate::bag::path_to_vec(&label.path)
-                            .into_iter()
-                            .map(|n| node_map.get_by_right(&n).unwrap().to_string())
-                            .collect();
+                        let translated_tagged: Vec<(String, M)> =
+                            crate::bag::path_to_vec_tagged(&label.path)
+                                .into_iter()
+                                .map(|(n, m)| {
+                                    (
+                                        node_map.get_by_right(&n).unwrap().to_string(),
+                                        m,
+                                    )
+                                })
+                                .collect();
                         Label {
                             node_id: translated_node_id.clone(),
-                            path: crate::bag::path_from_vec(translated_path),
+                            path: crate::bag::path_from_vec_tagged(translated_tagged),
                             objective: label.objective.clone(),
                             auxiliary: label.auxiliary.clone(),
                         }
@@ -419,12 +444,12 @@ impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
     ///
     /// Assumes exactly 2 objectives: time at index `OBJECTIVE_TIME_IDX` and cost at
     /// index `OBJECTIVE_COST_IDX`. Panics if the label has a different number of objectives.
-    fn exceeds_limit(&mut self, label: &Label<usize, A>) -> bool {
+    fn exceeds_limit(&mut self, label: &Label<usize, A, M>) -> bool {
         self.limits
             .is_limit_exceeded(label.objective.cost, label.objective.time)
     }
 
-    fn update_limits(&mut self, label: &Label<usize, A>, node_values: &Vec<u8>) {
+    fn update_limits(&mut self, label: &Label<usize, A, M>, node_values: &Vec<u8>) {
         for value in node_values.iter() {
             let category = value;
             self.limits
@@ -433,12 +458,13 @@ impl<'a, A: Default + Clone + AuxFlex + 'static> MLC<'a, A> {
     }
 }
 
-impl<A> fmt::Debug for MLC<'_, A> {
+impl<A, M> fmt::Debug for MLC<'_, A, M> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MLC")
             .field("debug", &self.debug)
             .field("disable_paths", &self.disable_paths)
             .field("enable_limit", &self.enable_limit)
+            .field("time_only_dominance", &self.time_only_dominance)
             .field("limits_defined", &self.limits)
             .finish()
     }
@@ -481,8 +507,10 @@ impl FromStr for LabelEntry {
 /// Read bags from the CSV debug format. Auxiliary is reconstructed via
 /// `A::default()` since the format only carries node_id, path, and objectives
 /// (the MLC algorithm treats aux opaquely and cannot generically serialize it).
-pub fn read_bags<A: Default + AuxFlex>(path: &str) -> Result<Bags<usize, A>, Box<dyn Error>> {
-    let mut bags: Bags<usize, A> = Bags::default();
+pub fn read_bags<A: Default + AuxFlex, M: Default>(
+    path: &str,
+) -> Result<Bags<usize, A, M>, Box<dyn Error>> {
+    let mut bags: Bags<usize, A, M> = Bags::default();
     for line in read_to_string(path)?.lines().skip(1) {
         let label_entry: LabelEntry = line.parse()?;
         let label = Label {
@@ -500,9 +528,10 @@ pub fn read_bags<A: Default + AuxFlex>(path: &str) -> Result<Bags<usize, A>, Box
 }
 
 /// Write bags in the CSV debug format. Only objectives (time, cost) are
-/// serialized — auxiliary is opaque to MLC and not part of this format.
-pub fn write_bags<T: Eq + Hash + Display + Clone, A>(
-    bags: &Bags<T, A>,
+/// serialized — auxiliary and per-hop edge tags are opaque to MLC and not
+/// part of this format.
+pub fn write_bags<T: Eq + Hash + Display + Clone, A, M>(
+    bags: &Bags<T, A, M>,
     path: &str,
 ) -> Result<(), Box<dyn Error>> {
     let mut file = std::fs::File::create(path)?;
