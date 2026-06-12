@@ -11,7 +11,7 @@
 > (documentation, ownership, history, decisions). **Always verify against
 > actual source files before making changes** — the index may be stale.
 
-Last indexed: 2026-06-03 (commit 020e5da)
+Last indexed: 2026-06-12 (commit 2033c61)
 ### Entry Points
 - `src/lib.rs`
 - `src/main.rs`
@@ -22,29 +22,31 @@ Last indexed: 2026-06-03 (commit 020e5da)
 ### Architectural Layers
 | Layer | Files | Purpose |
 |-------|-------|---------|
-| external:limit | 11 |  |
-| external:color_eyre::eyre::result | 9 |  |
-| external:bimap::bimap | 8 |  |
-| external:petgraph::graph::edgereference | 7 |  |
-| external:petgraph::{directed, graph} | 5 |  |
-| mlc | 4 |  |
-| settings.local | 1 |  |
-| cargo | 1 |  |
-| view | 1 |  |
-| workflows | 1 |  |
+| Application | 13 |  |
+| Config | 5 |  |
+
+### Guided Tour (11 steps)
+1. **Repository Overview**
+2. **main.rs**
+3. **lib.rs**
+4. **read.rs**
+5. **bag.rs**
+6. **mlc.rs**
+... and 5 more steps
 ### Hotspots (High Churn)
 | File | Churn | 90d Commits | Owner |
 |------|-------|-------------|-------|
-| `src/mlc.rs` | 90.9th %ile | 14 | Moritz Gottschling |
-| `src/mlc/test.rs` | 81.8th %ile | 12 | Philipp Peter |
+| `src/mlc.rs` | 90.9th %ile | 12 | Moritz Gottschling |
+| `src/mlc/test.rs` | 81.8th %ile | 10 | Philipp Peter |
 
 ## Code health
-Hotspot health: 3.33/10 (stable) ·
-Average: 5.23/10 ·
+Hotspot health: 3.27/10 (stable) ·
+Average: 8.22/10 ·
 Worst: 1.0/10 (`src/mlc.rs`)
 
 ### Critical biomarkers
-- `src/mlc/test.rs` — prior defect — impact −1.8
+- `src/mlc/test.rs` — prior defect — impact −2.0
+- `src/mlc.rs` — function hotspot (run) — impact −0.5
 - `src/mlc.rs` — prior defect — impact −0.4
 - `src/mlc.rs` — brain method (run) — impact −0.3
 
@@ -72,5 +74,12 @@ This repo has the Repowise MCP server configured. The tools below answer questio
 - PR review → `get_risk(targets=[...], changed_files=[...])`; read the `directive` block first.
 
 **Verify when:** `_meta.stale_warning` is present, or `retrieval_quality` is `partial`/`weak`, or `search_method` is `bm25`. Otherwise trust the response and act on it.
+
+### Output Distillation
+
+- Prefer `repowise distill <cmd>` for noisy commands — test runs, builds, `git status`/`log`/`diff`, searches, file listings. It runs the command unchanged (exit code preserved) and prints a compact, errors-first rendering; every error line survives.
+- Output may contain a marker like `[repowise#a1b2c3d4e5f6: 230 lines omitted (~6.1k tokens); restore: repowise expand a1b2c3d4e5f6]`. The omitted content is fully preserved — run `repowise expand <ref>` to retrieve it, or `repowise expand <ref> -q <regex>` for just the matching lines.
+- Never re-run a command to see omitted output; expand the marker instead.
+- For structure-level questions about a large indexed file ("what's in here", "which function handles X"), `get_context(["path"], include=["skeleton"])` returns the file with bodies elided — every signature plus the bodies of the most central symbols — at a fraction of the cost of a full Read.
 
 <!-- REPOWISE:END -->

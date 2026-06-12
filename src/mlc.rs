@@ -516,7 +516,7 @@ pub fn read_bags<A: Default + AuxFlex, M: Default>(
         let label = Label {
             objective: Objective::new(label_entry.values[0], label_entry.values[1]),
             auxiliary: A::default(),
-            path: crate::bag::path_from_vec(label_entry.path.clone()),
+            path: crate::bag::path_from_vec_default(label_entry.path.clone()),
             node_id: label_entry.node_id,
         };
         let bag = bags

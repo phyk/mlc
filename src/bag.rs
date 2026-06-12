@@ -59,10 +59,19 @@ pub struct PathNode<T, M = ()> {
 /// in reverse (terminal → start); `path_to_vec` materialises them start → end.
 pub type Path<T, M = ()> = Option<Rc<PathNode<T, M>>>;
 
-/// Build a Path from a Vec ordered start→end. Each node gets `M::default()` as
-/// its edge tag — used by callers that don't track per-edge metadata (tests,
-/// CSV `read_bags`).
-pub fn path_from_vec<T, M: Default>(v: Vec<T>) -> Path<T, M> {
+/// Build a Path from a Vec ordered start→end with `()` edge tags. Used by
+/// callers that don't track per-edge metadata (tests, simple integrations).
+/// Kept as a non-generic shim so existing call sites continue to infer
+/// `Path<T, ()>` without needing turbofish annotations. For richer `M`,
+/// use `path_from_vec_default` (M: Default) or `path_from_vec_tagged`.
+pub fn path_from_vec<T>(v: Vec<T>) -> Path<T, ()> {
+    path_from_vec_default(v)
+}
+
+/// Like `path_from_vec` but for any `M: Default` — every node gets
+/// `M::default()` as its edge tag. Used when the caller has a specific `M` in
+/// mind (e.g. MCR's `EdgeMode`, where start nodes carry `None`).
+pub fn path_from_vec_default<T, M: Default>(v: Vec<T>) -> Path<T, M> {
     let mut cur: Path<T, M> = None;
     for node_id in v {
         cur = Some(Rc::new(PathNode {
