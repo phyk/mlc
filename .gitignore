@@ -1,3 +1,4 @@
 /target
 callgrind.out.*
 .repowise
+.DS_Store
